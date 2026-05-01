@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harsha Clothing | Premium Clothing Store</title>
+  <meta name="description" content="Harsha Clothing - Premium ethnic, festive, cotton, party and modern wear. Shop with WhatsApp checkout and easy order tracking.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317110f'/%3E%3Ctext x='50%25' y='57%25' text-anchor='middle' font-size='30' fill='%23c89b55' font-family='serif'%3EHC%3C/text%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="top-bar">Premium Clothing • WhatsApp Checkout • Free Shipping Above ₹1999</div>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">HARSHA<span>CLOTHING</span></a>
+
+      <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+      <nav class="nav" id="navMenu">
+        <a href="#home" onclick="closeMenu()">Home</a>
+        <a href="#collections" onclick="closeMenu()">Collections</a>
+        <a href="#products" onclick="closeMenu()">Shop</a>
+        <a href="track.html" onclick="closeMenu()">Track Order</a>
+        <a href="#contact" onclick="closeMenu()">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="icon-btn" onclick="showWishlist()" title="Wishlist">♡</button>
+        <button class="cart-btn" onclick="openCart()">Cart <span id="cartCount">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero" id="home">
+    <div class="hero-content">
+      <p class="eyebrow">Premium Indian Fashion</p>
+      <h1>Elegant clothing for every occasion.</h1>
+      <p>Discover refined ethnic, festive, cotton and modern styles selected for comfort, quality and a premium shopping experience.</p>
+      <div class="hero-buttons">
+        <a href="#products" class="main-btn">Shop Now</a>
+        <a href="#collections" class="outline-btn">Explore Collections</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-card">
+        <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=80" alt="Premium clothing collection">
+      </div>
+      <div class="float-badge">
+        <strong>New Arrivals</strong>
+        <span>Fresh premium styles added</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="premium-strip">
+    <div><h3>Premium Styles</h3><p>Elegant designs for daily and festive wear.</p></div>
+    <div><h3>Size Selection</h3><p>Select size before placing your order.</p></div>
+    <div><h3>WhatsApp Checkout</h3><p>Quick ordering with full product details.</p></div>
+    <div><h3>Order Tracking</h3><p>Track your order status easily.</p></div>
+  </section>
+
+  <section class="section" id="collections">
+    <p class="section-small">Curated Categories</p>
+    <h2>Shop by Collection</h2>
+
+    <div class="collections-grid">
+      <div class="collection-card" onclick="quickCategory('Ethnic')">
+        <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80" alt="Ethnic wear">
+        <h3>Ethnic Wear</h3>
+      </div>
+      <div class="collection-card" onclick="quickCategory('Festive')">
+        <img src="https://images.unsplash.com/photo-1596783074918-c84cb06531ca?auto=format&fit=crop&w=900&q=80" alt="Festive wear">
+        <h3>Festive Wear</h3>
+      </div>
+      <div class="collection-card" onclick="quickCategory('Modern')">
+        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80" alt="Modern wear">
+        <h3>Modern Wear</h3>
+      </div>
+    </div>
+  </section>
+
+  <section class="banner">
+    <div>
+      <p class="section-small">Limited Edition</p>
+      <h2>Premium festive looks for memorable moments.</h2>
+      <p>Build your wardrobe with handpicked styles for celebrations, family events, workdays and weekend outings.</p>
+      <a class="main-btn" href="#products">View Products</a>
+    </div>
+  </section>
+
+  <section class="section" id="products">
+    <p class="section-small">Fresh Arrivals</p>
+    <h2>Shop Products</h2>
+
+    <div class="shop-layout">
+      <aside class="filters">
+        <h3>Filter Products</h3>
+        <input type="text" id="searchInput" placeholder="Search product...">
+        <select id="categoryFilter">
+          <option value="all">All Categories</option>
+          <option value="Ethnic">Ethnic</option>
+          <option value="Festive">Festive</option>
+          <option value="Modern">Modern</option>
+          <option value="Cotton">Cotton</option>
+          <option value="Party">Party</option>
+        </select>
+        <select id="sizeFilter">
+          <option value="all">All Sizes</option>
+          <option value="XS">XS</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+        </select>
+        <div class="filter-row">
+          <input type="number" id="minPrice" placeholder="Min ₹">
+          <input type="number" id="maxPrice" placeholder="Max ₹">
+        </div>
+        <select id="sortFilter">
+          <option value="default">Sort: Featured</option>
+          <option value="low">Price: Low to High</option>
+          <option value="high">Price: High to Low</option>
+          <option value="name">Name A-Z</option>
+        </select>
+        <button class="main-btn" onclick="clearFilters()">Clear Filters</button>
+      </aside>
+
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+  </section>
+
+  <section class="section why-us">
+    <p class="section-small">Why Choose Us</p>
+    <h2>Built for a premium shopping experience</h2>
+    <div class="why-grid">
+      <div class="why-card"><h3>Curated Fashion</h3><p>Products can be added and managed from the admin panel.</p></div>
+      <div class="why-card"><h3>Stock Control</h3><p>Out-of-stock products are shown clearly and blocked from ordering.</p></div>
+      <div class="why-card"><h3>Wishlist</h3><p>Customers can save favorite products locally.</p></div>
+      <div class="why-card"><h3>Order Status</h3><p>Admin can update customer orders from pending to delivered.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="section-small">Customer Reviews</p>
+    <h2>What Customers Say</h2>
+    <div class="review-grid">
+      <div class="review-card"><p>“The website looks premium and ordering is simple.”</p><h4>- Priya</h4></div>
+      <div class="review-card"><p>“Product page, size selection and WhatsApp checkout are very useful.”</p><h4>- Anjali</h4></div>
+      <div class="review-card"><p>“Clean design and easy product browsing.”</p><h4>- Meera</h4></div>
+    </div>
+  </section>
+
+  <section class="section about">
+    <p class="section-small">About Us</p>
+    <h2>Premium clothing made for style and comfort</h2>
+    <p>Harsha Clothing offers selected outfits for customers who want elegant designs, comfortable fabrics and a smooth shopping experience. Browse collections, select size, add to cart and order directly through WhatsApp.</p>
+  </section>
+
+  <section class="section contact" id="contact">
+    <h2>Order on WhatsApp</h2>
+    <p>For product questions and quick order support, contact us on WhatsApp.</p>
+    <a class="main-btn whatsapp-direct" href="https://wa.me/919059047796" target="_blank">Chat on WhatsApp</a>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="shipping.html">Shipping Policy</a>
+      <a href="refund.html">Refund Policy</a>
+      <a href="terms.html">Terms</a>
+      <a href="track.html">Track Order</a>
+      <a href="admin.html">Admin</a>
+    </div>
+    <p>© 2026 Harsha Clothing. All Rights Reserved.</p>
+  </footer>
+
+  <div class="cart-overlay" id="cartOverlay">
+    <div class="cart-box">
+      <div class="cart-head">
+        <h2>Your Cart</h2>
+        <button onclick="closeCart()">×</button>
+      </div>
+      <div id="cartItems"></div>
+      <h3 class="total">Total: ₹<span id="cartTotal">0</span></h3>
+      <div class="checkout-form">
+        <input type="text" id="custName" placeholder="Your Name">
+        <input type="text" id="custPhone" placeholder="Phone Number">
+        <textarea id="custAddress" placeholder="Delivery Address"></textarea>
+        <button onclick="sendWhatsAppOrder()">Order on WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu(){ document.getElementById("navMenu").classList.toggle("active-menu"); }
+    function closeMenu(){ document.getElementById("navMenu").classList.remove("active-menu"); }
+  </script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

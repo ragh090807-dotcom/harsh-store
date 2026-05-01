@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details | Harsha Clothing</title>
+  <meta name="description" content="Product details, size selection and WhatsApp checkout for Harsha Clothing.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317110f'/%3E%3Ctext x='50%25' y='57%25' text-anchor='middle' font-size='30' fill='%23c89b55' font-family='serif'%3EHC%3C/text%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="top-bar">Premium Clothing • WhatsApp Checkout • Free Shipping Above ₹1999</div>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">HARSHA<span>CLOTHING</span></a>
+      <button class="menu-btn" onclick="toggleMenu()">☰</button>
+      <nav class="nav" id="navMenu">
+        <a href="index.html" onclick="closeMenu()">Home</a>
+        <a href="index.html#collections" onclick="closeMenu()">Collections</a>
+        <a href="index.html#products" onclick="closeMenu()">Shop</a>
+        <a href="track.html" onclick="closeMenu()">Track Order</a>
+        <a href="index.html#contact" onclick="closeMenu()">Contact</a>
+      </nav>
+      <button class="cart-btn" onclick="openCart()">Cart <span id="cartCount">0</span></button>
+    </div>
+  </header>
+
+  <section class="product-detail-section" id="productDetail"></section>
+
+  <div class="cart-overlay" id="cartOverlay">
+    <div class="cart-box">
+      <div class="cart-head">
+        <h2>Your Cart</h2>
+        <button onclick="closeCart()">×</button>
+      </div>
+      <div id="cartItems"></div>
+      <h3 class="total">Total: ₹<span id="cartTotal">0</span></h3>
+      <div class="checkout-form">
+        <input type="text" id="custName" placeholder="Your Name">
+        <input type="text" id="custPhone" placeholder="Phone Number">
+        <textarea id="custAddress" placeholder="Delivery Address"></textarea>
+        <button onclick="sendWhatsAppOrder()">Order on WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="shipping.html">Shipping Policy</a>
+      <a href="refund.html">Refund Policy</a>
+      <a href="terms.html">Terms</a>
+      <a href="track.html">Track Order</a>
+    </div>
+    <p>© 2026 Harsha Clothing. All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    function toggleMenu(){ document.getElementById("navMenu").classList.toggle("active-menu"); }
+    function closeMenu(){ document.getElementById("navMenu").classList.remove("active-menu"); }
+  </script>
+  <script type="module" src="product.js"></script>
+</body>
+</html>

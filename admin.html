@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Harsha Clothing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+    body{background:#fbf5ec;color:#1f1f1f;padding:30px}
+    .login-box{max-width:420px;margin:80px auto;background:white;padding:30px;border-radius:22px;box-shadow:0 14px 40px rgba(0,0,0,.08)}
+    .login-box h1{font-family:'Playfair Display',serif;color:#b88645;margin-bottom:20px}
+    input,textarea,select{width:100%;padding:13px;margin-bottom:12px;border:1px solid #ddd;border-radius:12px}
+    textarea{height:90px;resize:none}
+    button{border:none;cursor:pointer;font-weight:700}
+    .login-box button,.save-btn{width:100%;padding:13px;border-radius:25px;background:#1c1512;color:white}
+    .error-message{color:#c62828;margin-top:12px;font-size:14px}
+    #adminPanel{display:none}
+    .admin-header{background:#1c1512;color:white;padding:25px;border-radius:22px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center;gap:15px}
+    .admin-header h1{font-family:'Playfair Display',serif;color:#d6a85f;font-size:36px}
+    .admin-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .logout-btn,.export-btn{padding:12px 18px;border-radius:25px;color:white}
+    .logout-btn{background:#b88645}.export-btn{background:#25d366}
+    .section-card,.order-card,.product-card{background:white;padding:25px;border-radius:22px;margin-bottom:25px;box-shadow:0 14px 40px rgba(0,0,0,.08)}
+    .section-card h2,.order-card h2,.product-card h3{color:#b88645;margin-bottom:15px}
+    .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .product-card img{width:120px;height:150px;object-fit:cover;border-radius:12px;margin-bottom:10px}
+    .product-box{background:#fff4e4;padding:12px;border-radius:12px;margin-top:10px}
+    .total{font-weight:800;font-size:20px;margin-top:15px}
+    .danger-btn{background:#c62828;color:white;padding:12px 18px;border-radius:25px;margin-top:12px}
+    .edit-btn{background:#1c1512;color:white;padding:12px 18px;border-radius:25px;margin-top:12px;margin-right:8px}
+    .small-note{color:#666;font-size:13px;margin-bottom:14px}
+    @media(max-width:900px){body{padding:15px}.admin-header{flex-direction:column;align-items:flex-start}.admin-actions button{width:100%}.admin-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="login-box" id="loginBox">
+    <h1>Admin Login</h1>
+    <input type="email" id="adminEmail" placeholder="Admin Email">
+    <input type="password" id="adminPassword" placeholder="Password">
+    <button onclick="loginAdmin()">Login</button>
+    <p class="error-message" id="loginError"></p>
+  </div>
+
+  <div id="adminPanel">
+    <div class="admin-header">
+      <div>
+        <h1>Harsha Clothing Admin</h1>
+        <p>Manage products, stock, orders and exports</p>
+      </div>
+      <div class="admin-actions">
+        <button class="export-btn" onclick="exportOrders()">Export Orders</button>
+        <button class="logout-btn" onclick="logoutAdmin()">Logout</button>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <div class="section-card">
+        <h2 id="productFormTitle">Add New Product</h2>
+        <p class="small-note">Use image URL for now. Stock 0 means Out of Stock.</p>
+        <input type="hidden" id="editingProductId">
+        <input type="text" id="productName" placeholder="Product Name">
+        <input type="number" id="productPrice" placeholder="Price">
+        <input type="text" id="productCategory" placeholder="Category e.g. Ethnic, Modern, Party">
+        <input type="text" id="productSizes" placeholder="Sizes e.g. S,M,L,XL">
+        <input type="number" id="productStock" placeholder="Stock Quantity">
+        <input type="text" id="productImage" placeholder="Image URL">
+        <textarea id="productDescription" placeholder="Product Description"></textarea>
+        <button class="save-btn" onclick="saveProduct()">Save Product</button>
+        <button class="danger-btn" onclick="clearProductForm()">Clear Form</button>
+      </div>
+
+      <div class="section-card">
+        <h2>Products</h2>
+        <div id="adminProducts"></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Orders</h2>
+      <div id="orders"></div>
+    </div>
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
