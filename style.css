@@ -15,14 +15,15 @@
   --shadow: 0 18px 45px rgba(23, 17, 15, 0.12);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: "Poppins", sans-serif;
   background: var(--cream);
   color: var(--dark);
-}
-
-html {
-  scroll-behavior: smooth;
+  transition: 0.4s;
 }
 
 .top-bar {
@@ -352,6 +353,10 @@ button:hover {
   color: #eee;
 }
 
+.trust-section {
+  padding-top: 35px;
+}
+
 .shop-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -410,10 +415,12 @@ textarea:focus {
   overflow: hidden;
   box-shadow: var(--shadow);
   transition: 0.35s;
+  border: 1px solid #f1e4d1;
 }
 
 .product-card:hover {
   transform: translateY(-8px);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.15);
 }
 
 .product-image-wrap {
@@ -470,6 +477,7 @@ textarea:focus {
   font-size: 19px;
   margin-bottom: 8px;
   cursor: pointer;
+  font-weight: 700;
 }
 
 .price {
@@ -477,6 +485,7 @@ textarea:focus {
   font-size: 22px;
   font-weight: 900;
   margin-bottom: 8px;
+  letter-spacing: 1px;
 }
 
 .muted {
@@ -540,9 +549,12 @@ textarea:focus {
   margin: auto;
 }
 
-.contact .main-btn {
-  display: inline-block;
-  margin-top: 20px;
+.contact-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 22px;
+  flex-wrap: wrap;
 }
 
 footer {
@@ -563,6 +575,12 @@ footer {
 .footer-links a {
   color: var(--gold-light);
   text-decoration: none;
+}
+
+.footer-info {
+  margin-bottom: 18px;
+  color: #eee;
+  line-height: 1.8;
 }
 
 .cart-overlay {
