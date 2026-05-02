@@ -475,6 +475,21 @@ window.showWishlist = showWishlist;
 window.clearFilters = clearFilters;
 window.quickCategory = quickCategory;
 
-loadCollectionsFromFirebase();
-loadProductsFromFirebase();
-updateCart();
+async function initWebsite() {
+  try {
+    await loadCollectionsFromFirebase();
+  } catch (error) {
+    console.error("Collections loading failed:", error);
+  }
+
+  try {
+    await loadProductsFromFirebase();
+  } catch (error) {
+    console.error("Products loading failed:", error);
+    productGrid.innerHTML = `<div class="empty-state"><h3>Error loading products.</h3></div>`;
+  }
+
+  updateCart();
+}
+
+initWebsite();
