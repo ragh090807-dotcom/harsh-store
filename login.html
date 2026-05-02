@@ -4,26 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customer Login | Harsha Clothing</title>
+
   <link rel="stylesheet" href="style.css">
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
-<section class="track-page">
-  <div class="track-box">
+<section class="login-page">
+  <div class="login-box">
     <h1>Customer Login</h1>
+    <p>Login with Gmail to place orders and view your order history.</p>
 
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
+    <button onclick="loginWithGoogle()">Login with Gmail</button>
 
-    <button onclick="loginCustomer()">Login</button>
-    <button onclick="signupCustomer()">Create Account</button>
+    <br><br>
 
-    <p id="authMessage"></p>
-
-    <a href="index.html" class="main-btn">Back to Home</a>
+    <a href="index.html" class="outline-btn">Back to Home</a>
   </div>
 </section>
 
 <script type="module" src="login.js"></script>
+
 </body>
 </html>
