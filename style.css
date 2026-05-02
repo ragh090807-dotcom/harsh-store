@@ -206,4 +206,19 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+}.contact {
+  text-align: center;
+  padding-bottom: 120px !important;
+}
+
+.contact-buttons {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.contact-buttons .main-btn {
+  display: inline-block;
+  padding: 16px 30px;
+  font-size: 16px;
 }
