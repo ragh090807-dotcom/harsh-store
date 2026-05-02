@@ -386,18 +386,22 @@ async function sendWhatsAppOrder() {
   }
 });
 
+
+// ✅ MAKE FUNCTIONS GLOBAL (IMPORTANT)
 window.addToCart = addToCart;
-window.removeFromCart = removeFromCart;
-window.increaseQty = increaseQty;
-window.decreaseQty = decreaseQty;
-window.openCart = openCart;
-window.closeCart = closeCart;
-window.sendWhatsAppOrder = sendWhatsAppOrder;
 window.openProduct = openProduct;
 window.toggleWishlist = toggleWishlist;
 window.showWishlist = showWishlist;
 window.clearFilters = clearFilters;
 window.quickCategory = quickCategory;
 
+window.removeFromCart = removeFromCart;
+window.increaseQty = increaseQty;
+window.decreaseQty = decreaseQty;
+window.openCart = openCart;
+window.closeCart = closeCart;
+window.sendWhatsAppOrder = sendWhatsAppOrder;
+
+// ✅ LOAD DATA
 loadProductsFromFirebase();
 updateCart();
