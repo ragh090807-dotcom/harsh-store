@@ -15,6 +15,7 @@ let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
 let showingWishlistOnly = false;
 
 const productGrid = document.getElementById("productGrid");
+const collectionsGrid = document.getElementById("collectionsGrid");
 const cartCount = document.getElementById("cartCount");
 const cartItems = document.getElementById("cartItems");
 const cartTotal = document.getElementById("cartTotal");
@@ -31,6 +32,43 @@ async function saveOrder(orderData) {
     ...orderData,
     createdAt: serverTimestamp()
   });
+}
+
+async function loadCollectionsFromFirebase() {
+  if (!collectionsGrid || !categoryFilter) return;
+
+  collectionsGrid.innerHTML = "<p>Loading collections...</p>";
+  categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
+
+  try {
+    const snapshot = await getDocs(collection(db, "collections"));
+
+    collectionsGrid.innerHTML = "";
+
+    if (snapshot.empty) {
+      collectionsGrid.innerHTML = "<p>No collections added yet.</p>";
+      return;
+    }
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+
+      categoryFilter.innerHTML += `
+        <option value="${data.name}">${data.name}</option>
+      `;
+
+      collectionsGrid.innerHTML += `
+        <div class="collection-card" onclick="quickCategory('${data.name}')">
+          <img src="${data.image}" alt="${data.name}">
+          <h3>${data.name}</h3>
+        </div>
+      `;
+    });
+
+  } catch (error) {
+    console.error(error);
+    collectionsGrid.innerHTML = "<p>Error loading collections.</p>";
+  }
 }
 
 async function loadProductsFromFirebase() {
@@ -386,22 +424,19 @@ async function sendWhatsAppOrder() {
   }
 });
 
-
-// ✅ MAKE FUNCTIONS GLOBAL (IMPORTANT)
 window.addToCart = addToCart;
-window.openProduct = openProduct;
-window.toggleWishlist = toggleWishlist;
-window.showWishlist = showWishlist;
-window.clearFilters = clearFilters;
-window.quickCategory = quickCategory;
-
 window.removeFromCart = removeFromCart;
 window.increaseQty = increaseQty;
 window.decreaseQty = decreaseQty;
 window.openCart = openCart;
 window.closeCart = closeCart;
 window.sendWhatsAppOrder = sendWhatsAppOrder;
+window.openProduct = openProduct;
+window.toggleWishlist = toggleWishlist;
+window.showWishlist = showWishlist;
+window.clearFilters = clearFilters;
+window.quickCategory = quickCategory;
 
-// ✅ LOAD DATA
+loadCollectionsFromFirebase();
 loadProductsFromFirebase();
 updateCart();
