@@ -34,30 +34,18 @@ const defaultCollections = [
   { name: "Watch and Buy", image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80" }
 ];
 
-function isVideoProduct(product) {
-  const url = String(product.image || "").toLowerCase();
-  const category = String(product.category || "").trim().toLowerCase();
+function isVideoUrl(url) {
+  const value = String(url || "").toLowerCase();
+  return value.includes(".mp4") || value.includes(".webm") || value.includes(".mov");
+}
 
-  return (
-    category === "watch and buy" ||
-    url.includes(".mp4") ||
-    url.includes(".webm") ||
-    url.includes(".mov")
-  );
+function isVideoProduct(product) {
+  return String(product.category || "").toLowerCase() === "watch and buy" || isVideoUrl(product.image);
 }
 
 function productMediaHTML(product) {
   if (isVideoProduct(product)) {
-    return `
-      <video
-        src="${product.image}"
-        autoplay
-        muted
-        loop
-        playsinline
-        onclick="openProduct('${product.id}')">
-      </video>
-    `;
+    return `<video src="${product.image}" autoplay muted loop playsinline onclick="openProduct('${product.id}')"></video>`;
   }
 
   return `<img src="${product.image}" alt="${product.name}" onclick="openProduct('${product.id}')">`;
@@ -80,7 +68,7 @@ function renderCollectionCard(data) {
 
   collectionsGrid.innerHTML += `
     <div class="collection-card" onclick="quickCategory('${data.name}')">
-      <img src="${data.image}">
+      <img src="${data.image}" alt="${data.name}">
       <h3>${data.name}</h3>
     </div>
   `;
@@ -140,7 +128,7 @@ function getSizes(product) {
   if (Array.isArray(product.sizes)) return product.sizes;
 
   if (typeof product.sizes === "string") {
-    return product.sizes.split(",").map(s => s.trim()).filter(Boolean);
+    return product.sizes.split(",").map(size => size.trim()).filter(Boolean);
   }
 
   return [];
@@ -158,35 +146,39 @@ function displayProducts(list = products) {
 
   list.forEach(product => {
     const sizes = getSizes(product);
-    const sizeOptions = sizes.map(s => `<option value="${s}">${s}</option>`).join("");
+    const sizeOptions = sizes.map(size => `<option value="${size}">${size}</option>`).join("");
     const isOut = Number(product.stock) <= 0;
     const wished = wishlist.includes(product.id);
 
     productGrid.innerHTML += `
-      <div class="product-card" onclick="openProduct('${product.id}')">
+      <div class="product-card">
         <div class="product-image-wrap">
           ${productMediaHTML(product)}
+
           <span class="product-badge">${isOut ? "Out of Stock" : product.category || "New"}</span>
+
+          <button class="wish-btn ${wished ? "active" : ""}" onclick="toggleWishlist('${product.id}')">
+            ${wished ? "♥" : "♡"}
+          </button>
         </div>
 
         <div class="product-info">
-          <h3>${product.name}</h3>
+          <h3 onclick="openProduct('${product.id}')">${product.name}</h3>
           <p class="price">₹${product.price}</p>
+          <p class="muted">${product.category || "Collection"} • Stock: ${product.stock ?? "Available"}</p>
 
           ${
             isOut
               ? `<div class="stock-out">Out of Stock</div>`
               : `
-                <select id="size-${product.id}" onclick="event.stopPropagation()">
+                <select id="size-${product.id}" class="size-select">
                   <option value="">Select Size</option>
                   ${sizeOptions}
                 </select>
 
                 <div class="product-actions">
-                  <button onclick="event.stopPropagation(); addToCart('${product.id}')">Add</button>
-                  <button onclick="event.stopPropagation(); toggleWishlist('${product.id}')">
-                    ${wished ? "♥" : "♡"}
-                  </button>
+                  <button type="button" onclick="addToCart('${product.id}')">Add to Cart</button>
+                  <button type="button" class="small-btn" onclick="openProduct('${product.id}')">View</button>
                 </div>
               `
           }
@@ -197,29 +189,32 @@ function displayProducts(list = products) {
 }
 
 function applyFilters() {
-  const searchValue = searchInput?.value.toLowerCase() || "";
-  const category = categoryFilter?.value || "all";
-  const size = sizeFilter?.value || "all";
-  const min = minPrice?.value ? Number(minPrice.value) : 0;
-  const max = maxPrice?.value ? Number(maxPrice.value) : Infinity;
-  const sort = sortFilter?.value || "default";
+  const searchValue = searchInput ? searchInput.value.toLowerCase() : "";
+  const category = categoryFilter ? categoryFilter.value : "all";
+  const size = sizeFilter ? sizeFilter.value : "all";
+  const min = minPrice && minPrice.value !== "" ? Number(minPrice.value) : 0;
+  const max = maxPrice && maxPrice.value !== "" ? Number(maxPrice.value) : Infinity;
+  const sort = sortFilter ? sortFilter.value : "default";
 
-  let filtered = products.filter(p => {
-    const sizes = getSizes(p);
+  let filtered = products.filter(product => {
+    const productSizes = getSizes(product);
 
     return (
-      p.name.toLowerCase().includes(searchValue) &&
-      (category === "all" || p.category?.toLowerCase() === category.toLowerCase()) &&
-      (size === "all" || sizes.includes(size)) &&
-      p.price >= min &&
-      p.price <= max &&
-      (!showingWishlistOnly || wishlist.includes(p.id))
+      String(product.name || "").toLowerCase().includes(searchValue) &&
+      (
+        category === "all" ||
+        String(product.category || "").trim().toLowerCase() === String(category || "").trim().toLowerCase()
+      ) &&
+      (size === "all" || productSizes.includes(size)) &&
+      Number(product.price) >= min &&
+      Number(product.price) <= max &&
+      (!showingWishlistOnly || wishlist.includes(product.id))
     );
   });
 
-  if (sort === "low") filtered.sort((a, b) => a.price - b.price);
-  if (sort === "high") filtered.sort((a, b) => b.price - a.price);
-  if (sort === "name") filtered.sort((a, b) => a.name.localeCompare(b.name));
+  if (sort === "low") filtered.sort((a, b) => Number(a.price) - Number(b.price));
+  if (sort === "high") filtered.sort((a, b) => Number(b.price) - Number(a.price));
+  if (sort === "name") filtered.sort((a, b) => String(a.name).localeCompare(String(b.name)));
 
   displayProducts(filtered);
 }
@@ -245,27 +240,234 @@ function clearFilters() {
 }
 
 function openProduct(id) {
-  window.location.href = `product.html?id=${id}`;
+  window.location.href = `product.html?id=${encodeURIComponent(id)}`;
 }
 
 function toggleWishlist(id) {
-  wishlist = wishlist.includes(id)
-    ? wishlist.filter(i => i !== id)
-    : [...wishlist, id];
+  if (wishlist.includes(id)) {
+    wishlist = wishlist.filter(item => item !== id);
+  } else {
+    wishlist.push(id);
+  }
 
   localStorage.setItem("wishlist", JSON.stringify(wishlist));
   applyFilters();
 }
 
-/* CART SAME AS BEFORE (no change) */
+function showWishlist() {
+  showingWishlistOnly = true;
+  document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+  applyFilters();
+}
+
+function addToCart(id) {
+  const product = products.find(item => item.id === id);
+
+  if (!product) {
+    alert("Product not found.");
+    return;
+  }
+
+  const sizeSelect = document.getElementById(`size-${id}`);
+  const selectedSize = sizeSelect ? sizeSelect.value : "";
+
+  if (!selectedSize) {
+    alert("Please select a size.");
+    return;
+  }
+
+  if (Number(product.stock) <= 0) {
+    alert("This product is out of stock.");
+    return;
+  }
+
+  const existing = cart.find(item => item.id === id && item.selectedSize === selectedSize);
+
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({
+      ...product,
+      selectedSize,
+      qty: 1
+    });
+  }
+
+  saveCart();
+  updateCart();
+  openCart();
+}
+
+function removeFromCart(id, selectedSize) {
+  cart = cart.filter(item => !(item.id === id && item.selectedSize === selectedSize));
+  saveCart();
+  updateCart();
+}
+
+function increaseQty(id, selectedSize) {
+  const item = cart.find(i => i.id === id && i.selectedSize === selectedSize);
+  if (item) item.qty++;
+  saveCart();
+  updateCart();
+}
+
+function decreaseQty(id, selectedSize) {
+  const item = cart.find(i => i.id === id && i.selectedSize === selectedSize);
+
+  if (item && item.qty > 1) {
+    item.qty--;
+  } else {
+    removeFromCart(id, selectedSize);
+    return;
+  }
+
+  saveCart();
+  updateCart();
+}
+
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+function getTotal() {
+  return cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
+}
+
+function updateCart() {
+  if (!cartCount || !cartItems || !cartTotal) return;
+
+  cartCount.innerText = cart.reduce((sum, item) => sum + item.qty, 0);
+  cartItems.innerHTML = "";
+
+  if (cart.length === 0) {
+    cartItems.innerHTML = "<p>Your cart is empty.</p>";
+  }
+
+  cart.forEach(item => {
+    cartItems.innerHTML += `
+      <div class="cart-item">
+        ${
+          isVideoProduct(item)
+            ? `<video src="${item.image}" muted playsinline></video>`
+            : `<img src="${item.image}" alt="${item.name}">`
+        }
+
+        <div>
+          <h4>${item.name}</h4>
+          <p>Size: ${item.selectedSize}</p>
+          <p>₹${item.price}</p>
+
+          <div class="qty-row">
+            <button onclick="decreaseQty('${item.id}', '${item.selectedSize}')">-</button>
+            <span>${item.qty}</span>
+            <button onclick="increaseQty('${item.id}', '${item.selectedSize}')">+</button>
+          </div>
+
+          <button class="remove-btn" onclick="removeFromCart('${item.id}', '${item.selectedSize}')">Remove</button>
+        </div>
+      </div>
+    `;
+  });
+
+  cartTotal.innerText = getTotal();
+}
+
+function openCart() {
+  const cartOverlay = document.getElementById("cartOverlay");
+  if (cartOverlay) cartOverlay.style.display = "flex";
+}
+
+function closeCart() {
+  const cartOverlay = document.getElementById("cartOverlay");
+  if (cartOverlay) cartOverlay.style.display = "none";
+}
+
+async function sendWhatsAppOrder() {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    alert("Please login with Gmail before placing order.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  const name = document.getElementById("custName").value.trim();
+  const phone = document.getElementById("custPhone").value.trim();
+  const address = document.getElementById("custAddress").value.trim();
+
+  if (!name || !phone || !address) {
+    alert("Please fill all details.");
+    return;
+  }
+
+  const orderData = {
+    name,
+    customerName: name,
+    phone,
+    address,
+    userId: currentUser.uid,
+    userEmail: currentUser.email,
+    cart,
+    items: cart,
+    total: getTotal(),
+    paymentMethod: "WhatsApp",
+    paymentStatus: "Pending",
+    orderStatus: "Order Placed",
+    paymentId: "Not paid"
+  };
+
+  const saved = await addDoc(collection(db, "orders"), {
+    ...orderData,
+    createdAt: serverTimestamp()
+  });
+
+  let message = `Hello, I want to place an order.%0A%0A`;
+  message += `Order ID: ${saved.id}%0A`;
+  message += `Name: ${name}%0A`;
+  message += `Phone: ${phone}%0A`;
+  message += `Address: ${address}%0A%0A`;
+
+  cart.forEach(item => {
+    message += `- ${item.name} | Size: ${item.selectedSize} | Qty: ${item.qty} | ₹${item.price}%0A`;
+  });
+
+  message += `%0ATotal: ₹${getTotal()}`;
+
+  localStorage.removeItem("cart");
+  cart = [];
+  updateCart();
+
+  alert("Order saved successfully.");
+  window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+}
+
+[searchInput, categoryFilter, sizeFilter, minPrice, maxPrice, sortFilter].forEach(el => {
+  if (el) {
+    el.addEventListener("input", () => {
+      showingWishlistOnly = false;
+      applyFilters();
+    });
+
+    el.addEventListener("change", () => {
+      showingWishlistOnly = false;
+      applyFilters();
+    });
+  }
+});
 
 window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.increaseQty = increaseQty;
+window.decreaseQty = decreaseQty;
+window.openCart = openCart;
+window.closeCart = closeCart;
+window.sendWhatsAppOrder = sendWhatsAppOrder;
 window.openProduct = openProduct;
 window.toggleWishlist = toggleWishlist;
+window.showWishlist = showWishlist;
 window.clearFilters = clearFilters;
 window.quickCategory = quickCategory;
 
-/* INIT */
 async function initWebsite() {
   await loadCollectionsFromFirebase();
   await loadProductsFromFirebase();
