@@ -10,7 +10,6 @@ import {
 const whatsappNumber = "919059047796";
 
 let products = [];
-let usingDemoProducts = false;
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
 let showingWishlistOnly = false;
@@ -37,14 +36,32 @@ async function saveOrder(orderData) {
 async function loadProductsFromFirebase() {
   productGrid.innerHTML = `<div class="empty-state"><h3>Loading products...</h3></div>`;
 
-  const snapshot = await getDocs(collection(db, "products"));
-  products = [];
+  try {
+    const snapshot = await getDocs(collection(db, "products"));
+    products = [];
 
-  snapshot.forEach(docSnap => {
-    products.push({ id: docSnap.id, ...docSnap.data() });
-  });
+    snapshot.forEach(docSnap => {
+      products.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
+    });
 
-  applyFilters();
+    applyFilters();
+  } catch (error) {
+    console.error(error);
+    productGrid.innerHTML = `<div class="empty-state"><h3>Error loading products.</h3></div>`;
+  }
+}
+
+function getSizes(product) {
+  if (Array.isArray(product.sizes)) return product.sizes;
+
+  if (typeof product.sizes === "string") {
+    return product.sizes.split(",").map(size => size.trim()).filter(Boolean);
+  }
+
+  return [];
 }
 
 function displayProducts(list = products) {
@@ -56,7 +73,7 @@ function displayProducts(list = products) {
   }
 
   list.forEach(product => {
-    const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+    const sizes = getSizes(product);
     const sizeOptions = sizes.map(size => `<option value="${size}">${size}</option>`).join("");
     const isOut = Number(product.stock) <= 0;
     const wished = wishlist.includes(product.id);
@@ -66,6 +83,7 @@ function displayProducts(list = products) {
         <div class="product-image-wrap">
           <img src="${product.image}" alt="${product.name}" onclick="openProduct('${product.id}')">
           <span class="product-badge">${isOut ? "Out of Stock" : product.category || "New"}</span>
+
           <button class="wish-btn ${wished ? "active" : ""}" onclick="toggleWishlist('${product.id}')">
             ${wished ? "♥" : "♡"}
           </button>
@@ -76,19 +94,21 @@ function displayProducts(list = products) {
           <p class="price">₹${product.price}</p>
           <p class="muted">${product.category || "Collection"} • Stock: ${product.stock ?? "Available"}</p>
 
-          ${isOut ? `
-            <div class="stock-out">Out of Stock</div>
-          ` : `
-            <select id="size-${product.id}" class="size-select">
-              <option value="">Select Size</option>
-              ${sizeOptions}
-            </select>
+          ${
+            isOut
+              ? `<div class="stock-out">Out of Stock</div>`
+              : `
+                <select id="size-${product.id}" class="size-select">
+                  <option value="">Select Size</option>
+                  ${sizeOptions}
+                </select>
 
-            <div class="product-actions">
-              <button onclick="addToCart('${product.id}')">Add to Cart</button>
-              <button class="small-btn" onclick="openProduct('${product.id}')">View</button>
-            </div>
-          `}
+                <div class="product-actions">
+                  <button type="button" onclick="addToCart('${product.id}')">Add to Cart</button>
+                  <button type="button" class="small-btn" onclick="openProduct('${product.id}')">View</button>
+                </div>
+              `
+          }
         </div>
       </div>
     `;
@@ -99,15 +119,15 @@ function applyFilters() {
   const searchValue = searchInput ? searchInput.value.toLowerCase() : "";
   const category = categoryFilter ? categoryFilter.value : "all";
   const size = sizeFilter ? sizeFilter.value : "all";
-  const min = minPrice ? Number(minPrice.value) || 0 : 0;
-  const max = maxPrice ? Number(maxPrice.value) || Infinity : Infinity;
+  const min = minPrice && minPrice.value !== "" ? Number(minPrice.value) : 0;
+  const max = maxPrice && maxPrice.value !== "" ? Number(maxPrice.value) : Infinity;
   const sort = sortFilter ? sortFilter.value : "default";
 
   let filtered = products.filter(product => {
-    const productSizes = Array.isArray(product.sizes) ? product.sizes : [];
+    const productSizes = getSizes(product);
 
     return (
-      product.name.toLowerCase().includes(searchValue) &&
+      String(product.name || "").toLowerCase().includes(searchValue) &&
       (category === "all" || product.category === category) &&
       (size === "all" || productSizes.includes(size)) &&
       Number(product.price) >= min &&
@@ -118,7 +138,7 @@ function applyFilters() {
 
   if (sort === "low") filtered.sort((a, b) => Number(a.price) - Number(b.price));
   if (sort === "high") filtered.sort((a, b) => Number(b.price) - Number(a.price));
-  if (sort === "name") filtered.sort((a, b) => a.name.localeCompare(b.name));
+  if (sort === "name") filtered.sort((a, b) => String(a.name).localeCompare(String(b.name)));
 
   displayProducts(filtered);
 }
@@ -132,17 +152,19 @@ function quickCategory(category) {
 
 function clearFilters() {
   showingWishlistOnly = false;
-  searchInput.value = "";
-  categoryFilter.value = "all";
-  sizeFilter.value = "all";
-  minPrice.value = "";
-  maxPrice.value = "";
-  sortFilter.value = "default";
+
+  if (searchInput) searchInput.value = "";
+  if (categoryFilter) categoryFilter.value = "all";
+  if (sizeFilter) sizeFilter.value = "all";
+  if (minPrice) minPrice.value = "";
+  if (maxPrice) maxPrice.value = "";
+  if (sortFilter) sortFilter.value = "default";
+
   applyFilters();
 }
 
 function openProduct(id) {
-  window.location.href = `product.html?id=${id}`;
+  window.location.href = `product.html?id=${encodeURIComponent(id)}`;
 }
 
 function toggleWishlist(id) {
@@ -164,12 +186,22 @@ function showWishlist() {
 
 function addToCart(id) {
   const product = products.find(item => item.id === id);
-  const selectedSize = document.getElementById(`size-${id}`)?.value;
 
-  if (!product) return;
+  if (!product) {
+    alert("Product not found.");
+    return;
+  }
+
+  const sizeSelect = document.getElementById(`size-${id}`);
+  const selectedSize = sizeSelect ? sizeSelect.value : "";
 
   if (!selectedSize) {
     alert("Please select a size.");
+    return;
+  }
+
+  if (Number(product.stock) <= 0) {
+    alert("This product is out of stock.");
     return;
   }
 
@@ -178,7 +210,11 @@ function addToCart(id) {
   if (existing) {
     existing.qty++;
   } else {
-    cart.push({ ...product, selectedSize, qty: 1 });
+    cart.push({
+      ...product,
+      selectedSize,
+      qty: 1
+    });
   }
 
   saveCart();
@@ -237,11 +273,13 @@ function updateCart() {
           <h4>${item.name}</h4>
           <p>Size: ${item.selectedSize}</p>
           <p>₹${item.price}</p>
+
           <div class="qty-row">
             <button onclick="decreaseQty('${item.id}', '${item.selectedSize}')">-</button>
             <span>${item.qty}</span>
             <button onclick="increaseQty('${item.id}', '${item.selectedSize}')">+</button>
           </div>
+
           <button class="remove-btn" onclick="removeFromCart('${item.id}', '${item.selectedSize}')">Remove</button>
         </div>
       </div>
@@ -274,6 +312,11 @@ function getCustomerDetails() {
     return null;
   }
 
+  if (phone.length < 10) {
+    alert("Please enter a valid phone number.");
+    return null;
+  }
+
   return { name, phone, address };
 }
 
@@ -299,27 +342,34 @@ async function sendWhatsAppOrder() {
     paymentId: "Not paid"
   };
 
-  const saved = await saveOrder(orderData);
-  orderData.orderId = saved.id;
+  try {
+    const saved = await saveOrder(orderData);
+    orderData.orderId = saved.id;
 
-  let message = `Hello, I want to place an order.%0A%0A`;
-  message += `Order ID: ${orderData.orderId}%0A`;
-  message += `Name: ${orderData.name}%0A`;
-  message += `Phone: ${orderData.phone}%0A`;
-  message += `Address: ${orderData.address}%0A%0A`;
+    let message = `Hello, I want to place an order.%0A%0A`;
+    message += `Order ID: ${orderData.orderId}%0A`;
+    message += `Name: ${orderData.name}%0A`;
+    message += `Phone: ${orderData.phone}%0A`;
+    message += `Address: ${orderData.address}%0A%0A`;
+    message += `Order Details:%0A`;
 
-  cart.forEach(item => {
-    message += `- ${item.name} | Size: ${item.selectedSize} | Qty: ${item.qty} | Price: ₹${item.price}%0A`;
-  });
+    cart.forEach(item => {
+      message += `- ${item.name} | Size: ${item.selectedSize} | Qty: ${item.qty} | Price: ₹${item.price}%0A`;
+    });
 
-  message += `%0ATotal Amount: ₹${orderData.total}`;
+    message += `%0ATotal Amount: ₹${orderData.total}`;
 
-  localStorage.removeItem("cart");
-  cart = [];
-  updateCart();
+    localStorage.removeItem("cart");
+    cart = [];
+    updateCart();
 
-  alert("Order saved successfully. Order ID: " + saved.id);
-  window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+    alert("Order saved successfully. Order ID: " + saved.id);
+    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+
+  } catch (error) {
+    console.error(error);
+    alert("Order not saved. Check Firebase.");
+  }
 }
 
 [searchInput, categoryFilter, sizeFilter, minPrice, maxPrice, sortFilter].forEach(el => {
