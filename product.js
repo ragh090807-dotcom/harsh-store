@@ -8,56 +8,29 @@ import {
 const productDetail = document.getElementById("productDetail");
 
 let currentProduct = null;
-let selectedImage = "";
 
 function getProductId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
 }
 
-function getProductImages(product) {
-  if (Array.isArray(product.images) && product.images.length > 0) {
-    return product.images;
-  }
-
-  if (product.image) {
-    return [product.image];
-  }
-
-  return [];
-}
-
-function isVideoUrl(url) {
-  const value = String(url || "").toLowerCase();
+function isVideoProduct(product) {
+  const url = product.image || "";
 
   return (
-    value.includes(".mp4") ||
-    value.includes(".webm") ||
-    value.includes(".mov")
+    product.category === "Watch and Buy" ||
+    url.includes(".mp4") ||
+    url.includes(".webm") ||
+    url.includes(".mov")
   );
 }
 
-function isVideoProduct(product) {
-  const category = String(product.category || "").trim().toLowerCase();
-  return category === "watch and buy" || isVideoUrl(product.image);
-}
-
 function cleanDescription(description) {
-  if (!description || String(description).includes("http")) {
+  if (!description || description.includes("http")) {
     return "Premium quality product designed for comfort, style and everyday confidence.";
   }
 
   return description;
-}
-
-function getSizes(product) {
-  if (Array.isArray(product.sizes)) return product.sizes;
-
-  if (typeof product.sizes === "string") {
-    return product.sizes.split(",").map(size => size.trim()).filter(Boolean);
-  }
-
-  return [];
 }
 
 async function loadProduct() {
@@ -72,20 +45,16 @@ async function loadProduct() {
     const productRef = doc(db, "products", productId);
     const productSnap = await getDoc(productRef);
 
-    if (!productSnap.exists()) {
+    if (productSnap.exists()) {
+      currentProduct = {
+        id: productSnap.id,
+        ...productSnap.data()
+      };
+
+      displayProduct(currentProduct);
+    } else {
       productDetail.innerHTML = "<p>Product not found.</p>";
-      return;
     }
-
-    currentProduct = {
-      id: productSnap.id,
-      ...productSnap.data()
-    };
-
-    const images = getProductImages(currentProduct);
-    selectedImage = images[0] || "";
-
-    displayProduct(currentProduct);
 
   } catch (error) {
     console.error(error);
@@ -93,54 +62,23 @@ async function loadProduct() {
   }
 }
 
-function renderMainMedia(product) {
-  if (isVideoProduct(product) || isVideoUrl(selectedImage)) {
-    return `
-      <video
-        src="${selectedImage}"
-        controls
-        autoplay
-        muted
-        loop
-        playsinline>
-      </video>
-    `;
-  }
-
-  return `<img src="${selectedImage}" alt="${product.name}">`;
-}
-
 function displayProduct(product) {
-  const sizes = getSizes(product);
-  const images = getProductImages(product);
+  const sizes = Array.isArray(product.sizes)
+    ? product.sizes
+    : typeof product.sizes === "string"
+      ? product.sizes.split(",").map(size => size.trim()).filter(Boolean)
+      : [];
+
   const sizeOptions = sizes.map(size => `<option value="${size}">${size}</option>`).join("");
   const isOut = Number(product.stock) <= 0;
   const description = cleanDescription(product.description);
 
   productDetail.innerHTML = `
-    <div>
-      <div class="product-detail-image">
-        ${renderMainMedia(product)}
-      </div>
-
+    <div class="product-detail-image">
       ${
-        images.length > 1
-          ? `
-            <div class="product-thumbnails">
-              ${images.map(img => `
-                <button
-                  class="${img === selectedImage ? "active-thumb" : ""}"
-                  onclick="changeProductImage('${img}')">
-                  ${
-                    isVideoUrl(img)
-                      ? `<video src="${img}" muted playsinline></video>`
-                      : `<img src="${img}" alt="Product image">`
-                  }
-                </button>
-              `).join("")}
-            </div>
-          `
-          : ""
+        isVideoProduct(product)
+          ? `<video src="${product.image}" controls autoplay muted loop playsinline></video>`
+          : `<img src="${product.image}" alt="${product.name}">`
       }
     </div>
 
@@ -174,13 +112,8 @@ function displayProduct(product) {
   `;
 }
 
-function changeProductImage(imageUrl) {
-  selectedImage = imageUrl;
-  displayProduct(currentProduct);
-}
-
 function addDetailProductToCart() {
-  const selectedSize = document.getElementById("detailSize")?.value;
+  const selectedSize = document.getElementById("detailSize").value;
 
   if (!selectedSize) {
     alert("Please select a size.");
@@ -210,6 +143,5 @@ function addDetailProductToCart() {
 }
 
 window.addDetailProductToCart = addDetailProductToCart;
-window.changeProductImage = changeProductImage;
 
 loadProduct();
