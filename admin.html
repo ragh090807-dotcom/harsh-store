@@ -17,7 +17,6 @@
     button{border:none;cursor:pointer;font-weight:700}
     .login-box button,.save-btn{width:100%;padding:13px;border-radius:25px;background:#1c1512;color:white}
     .error-message{color:#c62828;margin-top:12px;font-size:14px}
-
     #adminPanel{display:none}
 
     .admin-header{
@@ -150,16 +149,22 @@
 
       <div class="section-card">
         <h2 id="productFormTitle">Add New Product</h2>
-        <p class="small-note">Use image URL for now. Stock 0 means Out of Stock.</p>
+        <p class="small-note">
+          Use image URL or video URL. For Watch and Buy, use video URL. Stock 0 means Out of Stock.
+        </p>
 
         <input type="hidden" id="editingProductId">
 
         <input type="text" id="productName" placeholder="Product Name">
         <input type="number" id="productPrice" placeholder="Price">
-        <input type="text" id="productCategory" placeholder="Category e.g. Ethnic, Modern, Party">
+        <input type="text" id="productCategory" placeholder="Category e.g. Ethnic, Modern, Watch and Buy">
         <input type="text" id="productSizes" placeholder="Sizes e.g. S,M,L,XL">
         <input type="number" id="productStock" placeholder="Stock Quantity">
-        <input type="text" id="productImage" placeholder="Image URL">
+
+        <input type="text" id="productImage" placeholder="Main Image / Video URL">
+
+        <input type="text" id="productImages" placeholder="Extra Image URLs comma separated e.g. img1,img2,img3">
+
         <textarea id="productDescription" placeholder="Product Description"></textarea>
 
         <button class="save-btn" onclick="saveProduct()">Save Product</button>
