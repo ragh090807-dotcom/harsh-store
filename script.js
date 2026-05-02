@@ -1,5 +1,4 @@
 import { db, auth } from "./firebase-config.js";
-
 import {
   collection,
   getDocs,
@@ -15,7 +14,6 @@ let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
 let showingWishlistOnly = false;
 
 const productGrid = document.getElementById("productGrid");
-const collectionsGrid = document.getElementById("collectionsGrid");
 const cartCount = document.getElementById("cartCount");
 const cartItems = document.getElementById("cartItems");
 const cartTotal = document.getElementById("cartTotal");
@@ -27,450 +25,130 @@ const minPrice = document.getElementById("minPrice");
 const maxPrice = document.getElementById("maxPrice");
 const sortFilter = document.getElementById("sortFilter");
 
-function isVideoProduct(product) {
+/* ===== VIDEO CHECK ===== */
+function isVideo(product) {
   const url = product.image || "";
   return (
     product.category === "Watch and Buy" ||
-    url.includes(".mp4") ||
-    url.includes(".webm") ||
-    url.includes(".mov")
+    url.endsWith(".mp4") ||
+    url.endsWith(".webm") ||
+    url.endsWith(".mov")
   );
 }
 
-function productMediaHTML(product) {
-  if (isVideoProduct(product)) {
+/* ===== MEDIA HTML ===== */
+function getMedia(product) {
+  if (isVideo(product)) {
     return `
-      <video 
-  src="${product.image}" 
-  autoplay
-  muted 
-  loop 
-  playsinline
-  onclick="openProduct('${product.id}')">
-</video>
+      <video src="${product.image}" autoplay muted loop playsinline onclick="openProduct('${product.id}')"></video>
     `;
   }
-
   return `
-    <img src="${product.image}" alt="${product.name}" onclick="openProduct('${product.id}')">
+    <img src="${product.image}" onclick="openProduct('${product.id}')">
   `;
 }
 
-async function saveOrder(orderData) {
-  return await addDoc(collection(db, "orders"), {
-    ...orderData,
-    createdAt: serverTimestamp()
+/* ===== LOAD PRODUCTS ===== */
+async function loadProducts() {
+  productGrid.innerHTML = "<p>Loading...</p>";
+
+  const snapshot = await getDocs(collection(db, "products"));
+  products = [];
+
+  snapshot.forEach(docSnap => {
+    products.push({ id: docSnap.id, ...docSnap.data() });
   });
+
+  applyFilters();
 }
 
-async function loadCollectionsFromFirebase() {
-  if (!collectionsGrid || !categoryFilter) return;
-
-  collectionsGrid.innerHTML = "<p>Loading collections...</p>";
-  
-
-  try {
-    const snapshot = await getDocs(collection(db, "collections"));
-
-    collectionsGrid.innerHTML = "";
-
-    if (snapshot.empty) {
-      collectionsGrid.innerHTML = "<p>No collections added yet.</p>";
-      return;
-    }
-
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-
-      categoryFilter.innerHTML += `
-        <option value="${data.name}">${data.name}</option>
-      `;
-
-      collectionsGrid.innerHTML += `
-        <div class="collection-card" onclick="quickCategory('${data.name}')">
-          <img src="${data.image}" alt="${data.name}">
-          <h3>${data.name}</h3>
-        </div>
-      `;
-    });
-
-  } catch (error) {
-    console.error(error);
-    collectionsGrid.innerHTML = "<p>Error loading collections.</p>";
-  }
-}
-
-async function loadProductsFromFirebase() {
-  productGrid.innerHTML = `<div class="empty-state"><h3>Loading products...</h3></div>`;
-
-  try {
-    const snapshot = await getDocs(collection(db, "products"));
-    products = [];
-
-    snapshot.forEach(docSnap => {
-      products.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
-    });
-
-    applyFilters();
-  } catch (error) {
-    console.error(error);
-    productGrid.innerHTML = `<div class="empty-state"><h3>Error loading products.</h3></div>`;
-  }
-}
-
-function getSizes(product) {
-  if (Array.isArray(product.sizes)) return product.sizes;
-
-  if (typeof product.sizes === "string") {
-    return product.sizes.split(",").map(size => size.trim()).filter(Boolean);
-  }
-
-  return [];
-}
-
-function displayProducts(list = products) {
+/* ===== DISPLAY ===== */
+function displayProducts(list) {
   productGrid.innerHTML = "";
 
-  if (list.length === 0) {
-    productGrid.innerHTML = `<div class="empty-state"><h3>No products found.</h3></div>`;
-    return;
-  }
-
-  list.forEach(product => {
-    const sizes = getSizes(product);
-    const sizeOptions = sizes.map(size => `<option value="${size}">${size}</option>`).join("");
-    const isOut = Number(product.stock) <= 0;
-    const wished = wishlist.includes(product.id);
+  list.forEach(p => {
+    const sizes = (p.sizes || "").split(",");
 
     productGrid.innerHTML += `
       <div class="product-card">
         <div class="product-image-wrap">
-          ${productMediaHTML(product)}
-          <span class="product-badge">${isOut ? "Out of Stock" : product.category || "New"}</span>
-
-          <button class="wish-btn ${wished ? "active" : ""}" onclick="toggleWishlist('${product.id}')">
-            ${wished ? "♥" : "♡"}
-          </button>
+          ${getMedia(p)}
         </div>
 
         <div class="product-info">
-          <h3 onclick="openProduct('${product.id}')">${product.name}</h3>
-          <p class="price">₹${product.price}</p>
-          <p class="muted">${product.category || "Collection"} • Stock: ${product.stock ?? "Available"}</p>
+          <h3 onclick="openProduct('${p.id}')">${p.name}</h3>
+          <p class="price">₹${p.price}</p>
 
-          ${
-            isOut
-              ? `<div class="stock-out">Out of Stock</div>`
-              : `
-                <select id="size-${product.id}" class="size-select">
-                  <option value="">Select Size</option>
-                  ${sizeOptions}
-                </select>
+          <select id="size-${p.id}">
+            <option value="">Select Size</option>
+            ${sizes.map(s => `<option>${s}</option>`).join("")}
+          </select>
 
-                <div class="product-actions">
-                  <button type="button" onclick="addToCart('${product.id}')">Add to Cart</button>
-                  <button type="button" class="small-btn" onclick="openProduct('${product.id}')">View</button>
-                </div>
-              `
-          }
+          <div class="product-actions">
+            <button onclick="addToCart('${p.id}')">Add to Cart</button>
+            <button onclick="openProduct('${p.id}')">View</button>
+          </div>
         </div>
       </div>
     `;
   });
 }
 
+/* ===== FILTER FIX ===== */
 function applyFilters() {
-  const searchValue = searchInput ? searchInput.value.toLowerCase() : "";
-  const category = categoryFilter ? categoryFilter.value : "all";
-  const size = sizeFilter ? sizeFilter.value : "all";
-  const min = minPrice && minPrice.value !== "" ? Number(minPrice.value) : 0;
-  const max = maxPrice && maxPrice.value !== "" ? Number(maxPrice.value) : Infinity;
-  const sort = sortFilter ? sortFilter.value : "default";
+  const search = searchInput.value.toLowerCase();
+  const category = categoryFilter.value;
+  const size = sizeFilter.value;
+  const min = Number(minPrice.value) || 0;
+  const max = Number(maxPrice.value) || Infinity;
 
-  let filtered = products.filter(product => {
-    const productSizes = getSizes(product);
-
+  let filtered = products.filter(p => {
     return (
-      String(product.name || "").toLowerCase().includes(searchValue) &&
-      (category === "all" || String(product.category || "").trim().toLowerCase() === String(category).trim().toLowerCase()) &&
-      (size === "all" || productSizes.includes(size)) &&
-      Number(product.price) >= min &&
-      Number(product.price) <= max &&
-      (!showingWishlistOnly || wishlist.includes(product.id))
+      p.name.toLowerCase().includes(search) &&
+      (category === "all" ||
+        p.category?.toLowerCase().trim() === category.toLowerCase().trim()) &&
+      (size === "all" || (p.sizes || "").includes(size)) &&
+      Number(p.price) >= min &&
+      Number(p.price) <= max
     );
   });
-
-  if (sort === "low") filtered.sort((a, b) => Number(a.price) - Number(b.price));
-  if (sort === "high") filtered.sort((a, b) => Number(b.price) - Number(a.price));
-  if (sort === "name") filtered.sort((a, b) => String(a.name).localeCompare(String(b.name)));
 
   displayProducts(filtered);
 }
 
-function quickCategory(category) {
-  showingWishlistOnly = false;
-  categoryFilter.value = category;
-  document.getElementById("products").scrollIntoView({ behavior: "smooth" });
-  applyFilters();
-}
-
-function clearFilters() {
-  showingWishlistOnly = false;
-
-  if (searchInput) searchInput.value = "";
-  if (categoryFilter) categoryFilter.value = "all";
-  if (sizeFilter) sizeFilter.value = "all";
-  if (minPrice) minPrice.value = "";
-  if (maxPrice) maxPrice.value = "";
-  if (sortFilter) sortFilter.value = "default";
-
-  applyFilters();
-}
-
-function openProduct(id) {
-  window.location.href = `product.html?id=${encodeURIComponent(id)}`;
-}
-
-function toggleWishlist(id) {
-  if (wishlist.includes(id)) {
-    wishlist = wishlist.filter(item => item !== id);
-  } else {
-    wishlist.push(id);
-  }
-
-  localStorage.setItem("wishlist", JSON.stringify(wishlist));
-  applyFilters();
-}
-
-function showWishlist() {
-  showingWishlistOnly = true;
-  document.getElementById("products").scrollIntoView({ behavior: "smooth" });
-  applyFilters();
-}
-
+/* ===== CART ===== */
 function addToCart(id) {
-  const product = products.find(item => item.id === id);
+  const product = products.find(p => p.id === id);
+  const size = document.getElementById(`size-${id}`).value;
 
-  if (!product) {
-    alert("Product not found.");
+  if (!size) {
+    alert("Select size");
     return;
   }
 
-  const sizeSelect = document.getElementById(`size-${id}`);
-  const selectedSize = sizeSelect ? sizeSelect.value : "";
-
-  if (!selectedSize) {
-    alert("Please select a size.");
-    return;
-  }
-
-  if (Number(product.stock) <= 0) {
-    alert("This product is out of stock.");
-    return;
-  }
-
-  const existing = cart.find(item => item.id === id && item.selectedSize === selectedSize);
-
-  if (existing) {
-    existing.qty++;
-  } else {
-    cart.push({
-      ...product,
-      selectedSize,
-      qty: 1
-    });
-  }
-
-  saveCart();
-  updateCart();
-  openCart();
-}
-
-function removeFromCart(id, selectedSize) {
-  cart = cart.filter(item => !(item.id === id && item.selectedSize === selectedSize));
-  saveCart();
-  updateCart();
-}
-
-function increaseQty(id, selectedSize) {
-  const item = cart.find(i => i.id === id && i.selectedSize === selectedSize);
-  if (item) item.qty++;
-  saveCart();
-  updateCart();
-}
-
-function decreaseQty(id, selectedSize) {
-  const item = cart.find(i => i.id === id && i.selectedSize === selectedSize);
-
-  if (item && item.qty > 1) {
-    item.qty--;
-  } else {
-    removeFromCart(id, selectedSize);
-    return;
-  }
-
-  saveCart();
-  updateCart();
-}
-
-function saveCart() {
+  cart.push({ ...product, size });
   localStorage.setItem("cart", JSON.stringify(cart));
-}
-
-function getTotal() {
-  return cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
+  updateCart();
 }
 
 function updateCart() {
-  cartCount.innerText = cart.reduce((sum, item) => sum + item.qty, 0);
-  cartItems.innerHTML = "";
-
-  if (cart.length === 0) {
-    cartItems.innerHTML = "<p>Your cart is empty.</p>";
-  }
-
-  cart.forEach(item => {
-    cartItems.innerHTML += `
-      <div class="cart-item">
-        ${
-          isVideoProduct(item)
-            ? `<video src="${item.image}" muted playsinline></video>`
-            : `<img src="${item.image}" alt="${item.name}">`
-        }
-
-        <div>
-          <h4>${item.name}</h4>
-          <p>Size: ${item.selectedSize}</p>
-          <p>₹${item.price}</p>
-
-          <div class="qty-row">
-            <button onclick="decreaseQty('${item.id}', '${item.selectedSize}')">-</button>
-            <span>${item.qty}</span>
-            <button onclick="increaseQty('${item.id}', '${item.selectedSize}')">+</button>
-          </div>
-
-          <button class="remove-btn" onclick="removeFromCart('${item.id}', '${item.selectedSize}')">Remove</button>
-        </div>
-      </div>
-    `;
-  });
-
-  cartTotal.innerText = getTotal();
+  cartCount.innerText = cart.length;
 }
 
-function openCart() {
-  document.getElementById("cartOverlay").style.display = "flex";
+/* ===== NAV ===== */
+function openProduct(id) {
+  window.location.href = `product.html?id=${id}`;
 }
 
-function closeCart() {
-  document.getElementById("cartOverlay").style.display = "none";
-}
-
-function getCustomerDetails() {
-  const name = document.getElementById("custName").value.trim();
-  const phone = document.getElementById("custPhone").value.trim();
-  const address = document.getElementById("custAddress").value.trim();
-
-  if (cart.length === 0) {
-    alert("Your cart is empty.");
-    return null;
-  }
-
-  if (!name || !phone || !address) {
-    alert("Please fill all details.");
-    return null;
-  }
-
-  if (phone.length < 10) {
-    alert("Please enter a valid phone number.");
-    return null;
-  }
-
-  return { name, phone, address };
-}
-
-async function sendWhatsAppOrder() {
-  const details = getCustomerDetails();
-  if (!details) return;
-
-  const currentUser = auth.currentUser;
-
-  const orderData = {
-    name: details.name,
-    customerName: details.name,
-    phone: details.phone,
-    address: details.address,
-    userId: currentUser ? currentUser.uid : null,
-    userEmail: currentUser ? currentUser.email : null,
-    cart,
-    items: cart,
-    total: getTotal(),
-    paymentMethod: "WhatsApp",
-    paymentStatus: "Pending",
-    orderStatus: "Order Placed",
-    paymentId: "Not paid"
-  };
-
-  try {
-    const saved = await saveOrder(orderData);
-    orderData.orderId = saved.id;
-
-    let message = `Hello, I want to place an order.%0A%0A`;
-    message += `Order ID: ${orderData.orderId}%0A`;
-    message += `Name: ${orderData.name}%0A`;
-    message += `Phone: ${orderData.phone}%0A`;
-    message += `Address: ${orderData.address}%0A%0A`;
-    message += `Order Details:%0A`;
-
-    cart.forEach(item => {
-      message += `- ${item.name} | Size: ${item.selectedSize} | Qty: ${item.qty} | Price: ₹${item.price}%0A`;
-    });
-
-    message += `%0ATotal Amount: ₹${orderData.total}`;
-
-    localStorage.removeItem("cart");
-    cart = [];
-    updateCart();
-
-    alert("Order saved successfully. Order ID: " + saved.id);
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
-
-  } catch (error) {
-    console.error(error);
-    alert("Order not saved. Check Firebase.");
-  }
-}
-
-[searchInput, categoryFilter, sizeFilter, minPrice, maxPrice, sortFilter].forEach(el => {
-  if (el) {
-    el.addEventListener("input", () => {
-      showingWishlistOnly = false;
-      applyFilters();
-    });
-
-    el.addEventListener("change", () => {
-      showingWishlistOnly = false;
-      applyFilters();
-    });
-  }
+/* ===== EVENTS ===== */
+[searchInput, categoryFilter, sizeFilter, minPrice, maxPrice].forEach(el => {
+  el.addEventListener("input", applyFilters);
 });
 
+/* ===== GLOBAL ===== */
 window.addToCart = addToCart;
-window.removeFromCart = removeFromCart;
-window.increaseQty = increaseQty;
-window.decreaseQty = decreaseQty;
-window.openCart = openCart;
-window.closeCart = closeCart;
-window.sendWhatsAppOrder = sendWhatsAppOrder;
 window.openProduct = openProduct;
-window.toggleWishlist = toggleWishlist;
-window.showWishlist = showWishlist;
-window.clearFilters = clearFilters;
-window.quickCategory = quickCategory;
 
-loadCollectionsFromFirebase();
-loadProductsFromFirebase();
+/* ===== START ===== */
+loadProducts();
 updateCart();
