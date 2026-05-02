@@ -27,10 +27,19 @@ const minPrice = document.getElementById("minPrice");
 const maxPrice = document.getElementById("maxPrice");
 const sortFilter = document.getElementById("sortFilter");
 
+const defaultCollections = [
+  { name: "Ethnic", image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80" },
+  { name: "Festive", image: "https://images.unsplash.com/photo-1596783074918-c84cb06531ca?auto=format&fit=crop&w=900&q=80" },
+  { name: "Modern", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80" },
+  { name: "Watch and Buy", image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80" }
+];
+
 function isVideoProduct(product) {
-  const url = product.image || "";
+  const url = String(product.image || "").toLowerCase();
+  const category = String(product.category || "").trim().toLowerCase();
+
   return (
-    product.category === "Watch and Buy" ||
+    category === "watch and buy" ||
     url.includes(".mp4") ||
     url.includes(".webm") ||
     url.includes(".mov")
@@ -40,12 +49,12 @@ function isVideoProduct(product) {
 function productMediaHTML(product) {
   if (isVideoProduct(product)) {
     return `
-      <video 
-        src="${product.image}" 
-        autoplay 
-        muted 
-        loop 
-        playsinline 
+      <video
+        src="${product.image}"
+        autoplay
+        muted
+        loop
+        playsinline
         onclick="openProduct('${product.id}')">
       </video>
     `;
@@ -54,44 +63,58 @@ function productMediaHTML(product) {
   return `<img src="${product.image}" alt="${product.name}" onclick="openProduct('${product.id}')">`;
 }
 
-async function saveOrder(orderData) {
-  return await addDoc(collection(db, "orders"), {
-    ...orderData,
-    createdAt: serverTimestamp()
-  });
+function addCategoryOption(name) {
+  if (!categoryFilter || !name) return;
+
+  const exists = [...categoryFilter.options].some(
+    option => option.value.trim().toLowerCase() === name.trim().toLowerCase()
+  );
+
+  if (!exists) {
+    categoryFilter.innerHTML += `<option value="${name}">${name}</option>`;
+  }
+}
+
+function renderCollectionCard(data) {
+  if (!collectionsGrid) return;
+
+  collectionsGrid.innerHTML += `
+    <div class="collection-card" onclick="quickCategory('${data.name}')">
+      <img src="${data.image}" alt="${data.name}">
+      <h3>${data.name}</h3>
+    </div>
+  `;
 }
 
 async function loadCollectionsFromFirebase() {
   if (!collectionsGrid || !categoryFilter) return;
 
-  collectionsGrid.innerHTML = "<p>Loading collections...</p>";
+  collectionsGrid.innerHTML = "";
+
+  defaultCollections.forEach(item => {
+    addCategoryOption(item.name);
+    renderCollectionCard(item);
+  });
 
   try {
     const snapshot = await getDocs(collection(db, "collections"));
-    collectionsGrid.innerHTML = "";
 
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
 
-      if (![...categoryFilter.options].some(option => option.value === data.name)) {
-        categoryFilter.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+      if (data.name && data.image) {
+        addCategoryOption(data.name);
+        renderCollectionCard(data);
       }
-
-      collectionsGrid.innerHTML += `
-        <div class="collection-card" onclick="quickCategory('${data.name}')">
-          <img src="${data.image}" alt="${data.name}">
-          <h3>${data.name}</h3>
-        </div>
-      `;
     });
-
   } catch (error) {
-    console.error(error);
-    collectionsGrid.innerHTML = "<p>Error loading collections.</p>";
+    console.error("Collections loading failed:", error);
   }
 }
 
 async function loadProductsFromFirebase() {
+  if (!productGrid) return;
+
   productGrid.innerHTML = `<div class="empty-state"><h3>Loading products...</h3></div>`;
 
   try {
@@ -106,9 +129,10 @@ async function loadProductsFromFirebase() {
     });
 
     applyFilters();
+
   } catch (error) {
-    console.error(error);
-    productGrid.innerHTML = `<div class="empty-state"><h3>Error loading products.</h3></div>`;
+    console.error("Products loading failed:", error);
+    productGrid.innerHTML = `<div class="empty-state"><h3>Error loading products.</h3><p>Check Firebase or console.</p></div>`;
   }
 }
 
@@ -123,6 +147,8 @@ function getSizes(product) {
 }
 
 function displayProducts(list = products) {
+  if (!productGrid) return;
+
   productGrid.innerHTML = "";
 
   if (list.length === 0) {
@@ -210,7 +236,7 @@ function quickCategory(category) {
 
   if (categoryFilter) categoryFilter.value = category;
 
-  document.getElementById("products").scrollIntoView({ behavior: "smooth" });
+  document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
   applyFilters();
 }
 
@@ -244,7 +270,7 @@ function toggleWishlist(id) {
 
 function showWishlist() {
   showingWishlistOnly = true;
-  document.getElementById("products").scrollIntoView({ behavior: "smooth" });
+  document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
   applyFilters();
 }
 
@@ -322,6 +348,8 @@ function getTotal() {
 }
 
 function updateCart() {
+  if (!cartCount || !cartItems || !cartTotal) return;
+
   cartCount.innerText = cart.reduce((sum, item) => sum + item.qty, 0);
   cartItems.innerHTML = "";
 
@@ -359,17 +387,19 @@ function updateCart() {
 }
 
 function openCart() {
-  document.getElementById("cartOverlay").style.display = "flex";
+  const cartOverlay = document.getElementById("cartOverlay");
+  if (cartOverlay) cartOverlay.style.display = "flex";
 }
 
 function closeCart() {
-  document.getElementById("cartOverlay").style.display = "none";
+  const cartOverlay = document.getElementById("cartOverlay");
+  if (cartOverlay) cartOverlay.style.display = "none";
 }
 
 function getCustomerDetails() {
-  const name = document.getElementById("custName").value.trim();
-  const phone = document.getElementById("custPhone").value.trim();
-  const address = document.getElementById("custAddress").value.trim();
+  const name = document.getElementById("custName")?.value.trim();
+  const phone = document.getElementById("custPhone")?.value.trim();
+  const address = document.getElementById("custAddress")?.value.trim();
 
   if (cart.length === 0) {
     alert("Your cart is empty.");
@@ -387,6 +417,13 @@ function getCustomerDetails() {
   }
 
   return { name, phone, address };
+}
+
+async function saveOrder(orderData) {
+  return await addDoc(collection(db, "orders"), {
+    ...orderData,
+    createdAt: serverTimestamp()
+  });
 }
 
 async function sendWhatsAppOrder() {
@@ -476,19 +513,8 @@ window.clearFilters = clearFilters;
 window.quickCategory = quickCategory;
 
 async function initWebsite() {
-  try {
-    await loadCollectionsFromFirebase();
-  } catch (error) {
-    console.error("Collections loading failed:", error);
-  }
-
-  try {
-    await loadProductsFromFirebase();
-  } catch (error) {
-    console.error("Products loading failed:", error);
-    productGrid.innerHTML = `<div class="empty-state"><h3>Error loading products.</h3></div>`;
-  }
-
+  await loadCollectionsFromFirebase();
+  await loadProductsFromFirebase();
   updateCart();
 }
 
