@@ -1,193 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harsha Clothing</title>
+<a href="index.html" class="logo">
+  HARSHA
+  <span>CLOTHING</span>
+</a>
 
-  <link rel="stylesheet" href="style.css">
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
 
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-</head>
+<nav class="nav" id="navMenu">
+  <a href="#home" onclick="closeMenu()">Home</a>
+  <a href="#collections" onclick="closeMenu()">Collections</a>
+  <a href="#products" onclick="closeMenu()">Shop</a>
+  <a href="track.html" onclick="closeMenu()">Track Order</a>
+  <a href="login.html" onclick="closeMenu()">Login</a>
+  <a href="account.html" onclick="closeMenu()">My Orders</a>
+  <a href="#contact" onclick="closeMenu()">Contact</a>
+</nav>
 
-<body>
-
-<div class="top-bar">
-  Premium Clothing • WhatsApp Checkout • Free Shipping Above ₹1999
+<div class="header-actions">
+  <button class="icon-btn" onclick="showWishlist()">♡</button>
+  <button class="cart-btn" onclick="openCart()">
+    Cart <span id="cartCount">0</span>
+  </button>
 </div>
 
-<header class="header">
-  <div class="header-inner">
+<h1>Elegant clothing for every occasion</h1>
 
-    <a href="index.html" class="logo">
-      HARSHA
-      <span>CLOTHING</span>
-    </a>
+<p>
+  Discover premium ethnic, festive and modern styles designed for comfort and elegance.
+</p>
 
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
-
-    <nav class="nav" id="navMenu">
-      <a href="#home" onclick="closeMenu()">Home</a>
-      <a href="#collections" onclick="closeMenu()">Collections</a>
-      <a href="#products" onclick="closeMenu()">Shop</a>
-      <a href="track.html" onclick="closeMenu()">Track Order</a>
-      <a href="login.html" onclick="closeMenu()">Login</a>
-      <a href="account.html" onclick="closeMenu()">My Orders</a>
-      <a href="#contact" onclick="closeMenu()">Contact</a>
-    </nav>
-
-    <div class="header-actions">
-      <button class="icon-btn" onclick="showWishlist()">♡</button>
-      <button class="cart-btn" onclick="openCart()">
-        Cart <span id="cartCount">0</span>
-      </button>
-    </div>
-
-  </div>
-</header>
-
-<section class="hero" id="home">
-  <div class="hero-content">
-    <p class="eyebrow">Premium Fashion</p>
-
-    <h1>Elegant clothing for every occasion</h1>
-
-    <p>
-      Discover premium ethnic, festive and modern styles designed for comfort and elegance.
-    </p>
-
-    <div class="hero-buttons">
-      <a href="#products" class="main-btn">Shop Now</a>
-      <a href="#collections" class="outline-btn">Explore</a>
-    </div>
-  </div>
-
-  <div class="hero-visual">
-    <div class="hero-card">
-      <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=80">
-    </div>
-
-    <div class="float-badge">
-      <strong>New Arrivals</strong>
-      <span>Fresh styles available</span>
-    </div>
-  </div>
-</section>
-
-<section class="premium-strip">
-  <div><h3>Premium Quality</h3><p>Carefully selected clothing</p></div>
-  <div><h3>Size Options</h3><p>Choose your perfect fit</p></div>
-  <div><h3>WhatsApp Order</h3><p>Simple and fast checkout</p></div>
-  <div><h3>Order Tracking</h3><p>Track your orders anytime</p></div>
-</section>
-
-<section class="section" id="collections">
-  <h2>Collections</h2>
-  <div class="collections-grid" id="collectionsGrid"></div>
-</section>
-
-<section class="section" id="products">
-  <h2>Products</h2>
-
-  <div class="shop-layout">
-
-    <aside class="filters">
-      <h3>Filter Products</h3>
-
-      <input type="text" id="searchInput" placeholder="Search product...">
-
-      <select id="categoryFilter">
-        <option value="all">All Categories</option>
-        <option value="Ethnic">Ethnic</option>
-        <option value="Festive">Festive</option>
-        <option value="Modern">Modern</option>
-        <option value="Watch and Buy">Watch and Buy</option>
-      </select>
-
-      <select id="sizeFilter">
-        <option value="all">All Sizes</option>
-        <option value="S">S</option>
-        <option value="M">M</option>
-        <option value="L">L</option>
-        <option value="XL">XL</option>
-        <option value="XXL">XXL</option>
-      </select>
-
-      <div class="filter-row">
-        <input type="number" id="minPrice" placeholder="Min ₹">
-        <input type="number" id="maxPrice" placeholder="Max ₹">
-      </div>
-
-      <select id="sortFilter">
-        <option value="default">Sort: Featured</option>
-        <option value="low">Price: Low to High</option>
-        <option value="high">Price: High to Low</option>
-        <option value="name">Name A-Z</option>
-      </select>
-
-      <button class="main-btn" onclick="clearFilters()">Clear Filters</button>
-    </aside>
-
-    <div class="product-grid" id="productGrid"></div>
-
-  </div>
-</section>
-
-<section class="section contact" id="contact">
-  <h2>Contact</h2>
-  <p>Order directly via WhatsApp</p>
-
-  <div class="contact-buttons">
-    <a class="main-btn" href="https://wa.me/919059047796" target="_blank">
-      Chat on WhatsApp
-    </a>
-  </div>
-</section>
-
-<footer>
-  <div class="footer-links">
-    <a href="track.html">Track Order</a>
-    <a href="admin.html">Admin</a>
-
-    <!-- Added policy links -->
-    <a href="shipping.html">Shipping</a>
-    <a href="returns.html">Returns</a>
-    <a href="privacy.html">Privacy</a>
-    <a href="terms.html">Terms</a>
-  </div>
-
-  <p>© 2026 Harsha Clothing</p>
-</footer>
-
-<div class="cart-overlay" id="cartOverlay">
-  <div class="cart-box">
-    <div class="cart-head">
-      <h2>Your Cart</h2>
-      <button onclick="closeCart()">×</button>
-    </div>
-
-    <div id="cartItems"></div>
-
-    <h3>Total: ₹<span id="cartTotal">0</span></h3>
-
-    <input id="custName" placeholder="Name">
-    <input id="custPhone" placeholder="Phone">
-    <textarea id="custAddress" placeholder="Address"></textarea>
-
-    <button onclick="sendWhatsAppOrder()">Order</button>
-  </div>
+<div class="hero-buttons">
+  <a href="#products" class="main-btn">Shop Now</a>
+  <a href="#collections" class="outline-btn">Explore</a>
 </div>
-
-<script>
-function toggleMenu(){
-  document.getElementById("navMenu").classList.toggle("active-menu");
-}
-function closeMenu(){
-  document.getElementById("navMenu").classList.remove("active-menu");
-}
-</script>
-
-<script type="module" src="script.js"></script>
-
-</body>
-</html>
