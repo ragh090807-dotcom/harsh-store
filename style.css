@@ -3614,3 +3614,38 @@ footer {
     padding: 13px 16px !important;
   }
 }
+/* ===== WATCH AND BUY VIDEO SUPPORT ===== */
+
+.product-image-wrap video {
+  width: 100%;
+  height: 360px;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.35s ease;
+}
+
+.product-card:hover .product-image-wrap video {
+  transform: scale(1.05);
+}
+
+.cart-item video {
+  width: 90px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.product-detail-image video {
+  width: 100%;
+  height: auto;
+  max-height: 620px;
+  object-fit: contain;
+  border-radius: 28px;
+}
+
+@media (max-width: 760px) {
+  .product-image-wrap video {
+    height: 330px;
+  }
+}
