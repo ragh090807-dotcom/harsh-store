@@ -7,39 +7,6 @@ import {
 
 const productDetail = document.getElementById("productDetail");
 
-const demoProducts = [
-  {
-    id: "demo1",
-    name: "Royal Ethnic Kurta Set",
-    price: 2499,
-    category: "Ethnic",
-    sizes: ["S", "M", "L", "XL"],
-    stock: 12,
-    description: "Premium ethnic kurta set designed for festive occasions and elegant daily wear.",
-    image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80"
-  },
-  {
-    id: "demo2",
-    name: "Premium Festive Dress",
-    price: 3199,
-    category: "Festive",
-    sizes: ["M", "L", "XL"],
-    stock: 8,
-    description: "Stylish festive dress with a premium look and comfortable fit.",
-    image: "https://images.unsplash.com/photo-1596783074918-c84cb06531ca?auto=format&fit=crop&w=900&q=80"
-  },
-  {
-    id: "demo3",
-    name: "Modern Premium Co-ord Set",
-    price: 2199,
-    category: "Modern",
-    sizes: ["S", "M", "L", "XL"],
-    stock: 10,
-    description: "Modern co-ord set designed for stylish casual and semi-formal looks.",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80"
-  }
-];
-
 let currentProduct = null;
 
 function getProductId() {
@@ -47,9 +14,20 @@ function getProductId() {
   return params.get("id");
 }
 
+function isVideoProduct(product) {
+  const url = product.image || "";
+
+  return (
+    product.category === "Watch and Buy" ||
+    url.includes(".mp4") ||
+    url.includes(".webm") ||
+    url.includes(".mov")
+  );
+}
+
 function cleanDescription(description) {
   if (!description || description.includes("http")) {
-    return "Premium quality clothing designed for comfort, elegance and style. Perfect for festive, traditional and special occasions.";
+    return "Premium quality product designed for comfort, style and everyday confidence.";
   }
 
   return description;
@@ -72,39 +50,36 @@ async function loadProduct() {
         id: productSnap.id,
         ...productSnap.data()
       };
+
+      displayProduct(currentProduct);
     } else {
-      currentProduct = demoProducts.find(product => product.id === productId);
-    }
-
-    if (!currentProduct) {
       productDetail.innerHTML = "<p>Product not found.</p>";
-      return;
     }
-
-    displayProduct(currentProduct);
 
   } catch (error) {
     console.error(error);
-
-    currentProduct = demoProducts.find(product => product.id === productId);
-
-    if (currentProduct) {
-      displayProduct(currentProduct);
-    } else {
-      productDetail.innerHTML = "<p>Error loading product.</p>";
-    }
+    productDetail.innerHTML = "<p>Error loading product.</p>";
   }
 }
 
 function displayProduct(product) {
-  const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+  const sizes = Array.isArray(product.sizes)
+    ? product.sizes
+    : typeof product.sizes === "string"
+      ? product.sizes.split(",").map(size => size.trim()).filter(Boolean)
+      : [];
+
   const sizeOptions = sizes.map(size => `<option value="${size}">${size}</option>`).join("");
   const isOut = Number(product.stock) <= 0;
   const description = cleanDescription(product.description);
 
   productDetail.innerHTML = `
     <div class="product-detail-image">
-      <img src="${product.image}" alt="${product.name}">
+      ${
+        isVideoProduct(product)
+          ? `<video src="${product.image}" controls autoplay muted loop playsinline></video>`
+          : `<img src="${product.image}" alt="${product.name}">`
+      }
     </div>
 
     <div class="product-detail-info">
@@ -156,7 +131,7 @@ function addDetailProductToCart() {
   } else {
     cart.push({
       ...currentProduct,
-      selectedSize: selectedSize,
+      selectedSize,
       qty: 1
     });
   }
