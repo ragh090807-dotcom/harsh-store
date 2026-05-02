@@ -47,6 +47,14 @@ function getProductId() {
   return params.get("id");
 }
 
+function cleanDescription(description) {
+  if (!description || description.includes("http")) {
+    return "Premium quality clothing designed for comfort, elegance and style. Perfect for festive, traditional and special occasions.";
+  }
+
+  return description;
+}
+
 async function loadProduct() {
   const productId = getProductId();
 
@@ -92,6 +100,7 @@ function displayProduct(product) {
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
   const sizeOptions = sizes.map(size => `<option value="${size}">${size}</option>`).join("");
   const isOut = Number(product.stock) <= 0;
+  const description = cleanDescription(product.description);
 
   productDetail.innerHTML = `
     <div class="product-detail-image">
@@ -100,20 +109,20 @@ function displayProduct(product) {
 
     <div class="product-detail-info">
       <p class="section-small">${product.category || "Collection"}</p>
+
       <h1>${product.name}</h1>
+
       <h2>₹${product.price}</h2>
 
-      <p class="product-description">
-        ${product.description || "Premium quality clothing designed for comfort and style."}
-      </p>
+      <p class="product-description">${description}</p>
 
-      <p><b>Stock:</b> ${product.stock ?? "Available"}</p>
+      <p class="stock-text"><b>Stock:</b> ${product.stock ?? "Available"}</p>
 
       ${
         isOut
           ? `<div class="stock-out">Out of Stock</div>`
           : `
-            <label>Select Size</label>
+            <label for="detailSize">Select Size</label>
             <select id="detailSize">
               <option value="">Choose Size</option>
               ${sizeOptions}
