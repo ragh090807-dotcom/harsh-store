@@ -32,3 +32,52 @@
   <a href="#products" class="main-btn">Shop Now</a>
   <a href="#collections" class="outline-btn">Explore</a>
 </div>
+
+<div class="float-badge">
+  <strong>New Arrivals</strong>
+  <span>Fresh styles available</span>
+</div>
+
+<aside class="filters">
+  <h3>Filter Products</h3>
+
+  <input type="text" id="searchInput" placeholder="Search product...">
+
+  
+    <select id="categoryFilter">
+
+  <select id="sizeFilter">
+    <option value="all">All Sizes</option>
+    <option value="S">S</option>
+    <option value="M">M</option>
+    <option value="L">L</option>
+    <option value="XL">XL</option>
+    <option value="XXL">XXL</option>
+  </select>
+
+  <div class="filter-row">
+    <input type="number" id="minPrice" placeholder="Min ₹">
+    <input type="number" id="maxPrice" placeholder="Max ₹">
+  </div>
+
+  <select id="sortFilter">
+    <option value="default">Sort: Featured</option>
+    <option value="low">Price: Low to High</option>
+    <option value="high">Price: High to Low</option>
+    <option value="name">Name A-Z</option>
+  </select>
+
+  <button class="main-btn" onclick="clearFilters()">Clear Filters</button>
+</aside>
+
+<div class="product-grid" id="productGrid"></div>
+
+<div id="cartItems"></div>
+
+<h3>Total: ₹<span id="cartTotal">0</span></h3>
+
+<input id="custName" placeholder="Name">
+<input id="custPhone" placeholder="Phone">
+<textarea id="custAddress" placeholder="Address"></textarea>
+
+<button onclick="sendWhatsAppOrder()">Order</button>
