@@ -67,7 +67,7 @@ async function loadCollectionsFromFirebase() {
   if (!collectionsGrid || !categoryFilter) return;
 
   collectionsGrid.innerHTML = "<p>Loading collections...</p>";
-  categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
+  
 
   try {
     const snapshot = await getDocs(collection(db, "collections"));
