@@ -1,280 +1,185 @@
 import { db, auth } from "./firebase-config.js";
 
-import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import {
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  updateDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {collection,addDoc,getDocs,deleteDoc,updateDoc,doc,getDoc,serverTimestamp,query,orderBy} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ELEMENTS */
-const loginBox = document.getElementById("loginBox");
-const adminPanel = document.getElementById("adminPanel");
-const loginError = document.getElementById("loginError");
+const loginBox = document.getElementById("loginBox");const adminPanel = document.getElementById("adminPanel");const loginError = document.getElementById("loginError");
 
-const adminEmail = document.getElementById("adminEmail");
-const adminPassword = document.getElementById("adminPassword");
+const adminEmail = document.getElementById("adminEmail");const adminPassword = document.getElementById("adminPassword");
 
-const editingProductId = document.getElementById("editingProductId");
-const productFormTitle = document.getElementById("productFormTitle");
+const editingProductId = document.getElementById("editingProductId");const productFormTitle = document.getElementById("productFormTitle");const productName = document.getElementById("productName");const productPrice = document.getElementById("productPrice");const productCategory = document.getElementById("productCategory");const productSizes = document.getElementById("productSizes");const productStock = document.getElementById("productStock");const productImage = document.getElementById("productImage");const productDescription = document.getElementById("productDescription");
 
-const productName = document.getElementById("productName");
-const productPrice = document.getElementById("productPrice");
-const productCategory = document.getElementById("productCategory");
-const productSizes = document.getElementById("productSizes");
-const productStock = document.getElementById("productStock");
-const productImage = document.getElementById("productImage");
-const productImages = document.getElementById("productImages"); // NEW
-const productDescription = document.getElementById("productDescription");
-
-const adminProducts = document.getElementById("adminProducts");
-const ordersDiv = document.getElementById("orders");
+const adminProducts = document.getElementById("adminProducts");const ordersDiv = document.getElementById("orders");
 
 let ordersCache = [];
 
-/* LOGIN */
-async function loginAdmin() {
-  loginError.textContent = "";
+async function loginAdmin() {loginError.textContent = "";
 
-  if (!adminEmail.value || !adminPassword.value) {
-    loginError.textContent = "Enter email and password.";
-    return;
-  }
+if (!adminEmail.value || !adminPassword.value) {loginError.textContent = "Enter email and password.";return;}
 
-  try {
-    await signInWithEmailAndPassword(auth, adminEmail.value, adminPassword.value);
-  } catch (error) {
-    loginError.textContent = "Login failed: " + error.message;
-  }
+try {await signInWithEmailAndPassword(auth, adminEmail.value, adminPassword.value);} catch (error) {loginError.textContent = "Login failed: " + error.message;}}
+
+async function logoutAdmin() {await signOut(auth);}
+
+onAuthStateChanged(auth, user => {if (user) {loginBox.style.display = "none";adminPanel.style.display = "block";loadProducts();loadOrders();} else {loginBox.style.display = "block";adminPanel.style.display = "none";}});
+
+async function saveProduct() {if (!productName.value || !productPrice.value || !productImage.value) {alert("Product name, price and image are required.");return;}
+
+const productData = {name: productName.value.trim(),price: Number(productPrice.value),category: productCategory.value.trim(),sizes: productSizes.value.split(",").map(size => size.trim()).filter(Boolean),stock: Number(productStock.value) || 0,image: productImage.value.trim(),description: productDescription.value.trim(),updatedAt: serverTimestamp()};
+
+try {if (editingProductId.value) {await updateDoc(doc(db, "products", editingProductId.value), productData);alert("Product updated successfully.");} else {await addDoc(collection(db, "products"), {...productData,createdAt: serverTimestamp()});alert("Product added successfully.");}
+
+clearProductForm();
+loadProducts();
+
+} catch (error) {alert("Error saving product: " + error.message);}}
+
+async function loadProducts() {adminProducts.innerHTML = "Loading products...";
+
+try {const q = query(collection(db, "products"), orderBy("createdAt", "desc"));const snapshot = await getDocs(q);
+
+adminProducts.innerHTML = "";
+
+if (snapshot.empty) {
+  adminProducts.innerHTML = "<p>No products added yet.</p>";
+  return;
 }
 
-async function logoutAdmin() {
-  await signOut(auth);
-}
+snapshot.forEach(docSnap => {
+  const product = docSnap.data();
 
-onAuthStateChanged(auth, user => {
-  if (user) {
-    loginBox.style.display = "none";
-    adminPanel.style.display = "block";
-    loadProducts();
-    loadOrders();
-  } else {
-    loginBox.style.display = "block";
-    adminPanel.style.display = "none";
-  }
+  adminProducts.innerHTML += `
+    <div class="product-card">
+      <img src="${product.image}" alt="${product.name}">
+      <h3>${product.name}</h3>
+      <p><b>Price:</b> ₹${product.price}</p>
+      <p><b>Category:</b> ${product.category || "N/A"}</p>
+      <p><b>Sizes:</b> ${product.sizes ? product.sizes.join(", ") : "N/A"}</p>
+      <p><b>Stock:</b> ${product.stock}</p>
+      <button class="edit-btn" onclick="editProduct('${docSnap.id}')">Edit</button>
+      <button class="danger-btn" onclick="deleteProduct('${docSnap.id}')">Delete</button>
+    </div>
+  `;
 });
 
-/* =========================
-   SAVE PRODUCT (UPDATED)
-========================= */
-async function saveProduct() {
-  if (!productName.value || !productPrice.value || !productImage.value) {
-    alert("Product name, price and image are required.");
-    return;
-  }
+} catch (error) {adminProducts.innerHTML = "Error loading products.";console.error(error);}}
 
-  /* MULTI IMAGE LOGIC */
-  const extraImages = productImages.value
-    ? productImages.value.split(",").map(i => i.trim()).filter(Boolean)
-    : [];
+async function editProduct(productId) {try {const productRef = doc(db, "products", productId);const productSnap = await getDoc(productRef);
 
-  const allImages = [productImage.value.trim(), ...extraImages];
+if (!productSnap.exists()) {
+  alert("Product not found.");
+  return;
+}
 
-  const productData = {
-    name: productName.value.trim(),
-    price: Number(productPrice.value),
-    category: productCategory.value.trim(),
-    sizes: productSizes.value.split(",").map(s => s.trim()).filter(Boolean),
-    stock: Number(productStock.value) || 0,
+const product = productSnap.data();
 
-    /* IMPORTANT */
-    image: productImage.value.trim(), // keep old
-    images: allImages, // NEW
+editingProductId.value = productId;
+productFormTitle.textContent = "Edit Product";
+productName.value = product.name || "";
+productPrice.value = product.price || "";
+productCategory.value = product.category || "";
+productSizes.value = product.sizes ? product.sizes.join(",") : "";
+productStock.value = product.stock || 0;
+productImage.value = product.image || "";
+productDescription.value = product.description || "";
 
-    description: productDescription.value.trim(),
-    updatedAt: serverTimestamp()
+window.scrollTo({ top: 0, behavior: "smooth" });
+
+} catch (error) {alert("Error loading product: " + error.message);}}
+
+async function deleteProduct(productId) {if (!confirm("Delete this product?")) return;
+
+try {await deleteDoc(doc(db, "products", productId));alert("Product deleted.");loadProducts();} catch (error) {alert("Error deleting product: " + error.message);}}
+
+function clearProductForm() {editingProductId.value = "";productFormTitle.textContent = "Add New Product";productName.value = "";productPrice.value = "";productCategory.value = "";productSizes.value = "";productStock.value = "";productImage.value = "";productDescription.value = "";}
+
+async function loadOrders() {ordersDiv.innerHTML = "Loading orders...";
+
+try {const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));const snapshot = await getDocs(q);
+
+ordersDiv.innerHTML = "";
+ordersCache = [];
+
+if (snapshot.empty) {
+  ordersDiv.innerHTML = "<p>No orders yet.</p>";
+  return;
+}
+
+snapshot.forEach(docSnap => {
+  const order = {
+    id: docSnap.id,
+    ...docSnap.data()
   };
 
-  try {
-    if (editingProductId.value) {
-      await updateDoc(doc(db, "products", editingProductId.value), productData);
-      alert("Product updated successfully.");
-    } else {
-      await addDoc(collection(db, "products"), {
-        ...productData,
-        createdAt: serverTimestamp()
-      });
-      alert("Product added successfully.");
-    }
+  ordersCache.push(order);
 
-    clearProductForm();
-    loadProducts();
+  const orderItems = order.items || order.cart || [];
 
-  } catch (error) {
-    alert("Error saving product: " + error.message);
-  }
-}
-
-/* =========================
-   LOAD PRODUCTS
-========================= */
-async function loadProducts() {
-  adminProducts.innerHTML = "<p>Loading products...</p>";
-
-  try {
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
-
-    adminProducts.innerHTML = "";
-
-    if (snapshot.empty) {
-      adminProducts.innerHTML = "<p>No products added yet.</p>";
-      return;
-    }
-
-    snapshot.forEach(docSnap => {
-      const product = docSnap.data();
-
-      adminProducts.innerHTML += `
-        <div class="product-card">
-          <img src="${product.image}" alt="${product.name}">
-          <h3>${product.name}</h3>
-          <p><b>₹${product.price}</b></p>
-          <p>${product.category || ""}</p>
-          <button class="edit-btn" onclick="editProduct('${docSnap.id}')">Edit</button>
-          <button class="danger-btn" onclick="deleteProduct('${docSnap.id}')">Delete</button>
-        </div>
-      `;
-    });
-
-  } catch (error) {
-    adminProducts.innerHTML = "<p>Error loading products.</p>";
-  }
-}
-
-/* =========================
-   EDIT PRODUCT
-========================= */
-async function editProduct(productId) {
-  const ref = doc(db, "products", productId);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    alert("Product not found.");
-    return;
-  }
-
-  const p = snap.data();
-
-  editingProductId.value = productId;
-  productFormTitle.textContent = "Edit Product";
-
-  productName.value = p.name || "";
-  productPrice.value = p.price || "";
-  productCategory.value = p.category || "";
-  productSizes.value = p.sizes ? p.sizes.join(",") : "";
-  productStock.value = p.stock || 0;
-
-  productImage.value = p.image || "";
-
-  /* LOAD EXTRA IMAGES */
-  if (p.images && p.images.length > 1) {
-    productImages.value = p.images.slice(1).join(",");
-  } else {
-    productImages.value = "";
-  }
-
-  productDescription.value = p.description || "";
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-/* DELETE */
-async function deleteProduct(id) {
-  if (!confirm("Delete this product?")) return;
-
-  await deleteDoc(doc(db, "products", id));
-  alert("Deleted");
-  loadProducts();
-}
-
-/* CLEAR FORM */
-function clearProductForm() {
-  editingProductId.value = "";
-  productFormTitle.textContent = "Add New Product";
-
-  productName.value = "";
-  productPrice.value = "";
-  productCategory.value = "";
-  productSizes.value = "";
-  productStock.value = "";
-  productImage.value = "";
-  productImages.value = ""; // NEW
-  productDescription.value = "";
-}
-
-/* =========================
-   ORDERS (NO CHANGE)
-========================= */
-async function loadOrders() {
-  ordersDiv.innerHTML = "<p>Loading orders...</p>";
-
-  const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
-
-  ordersDiv.innerHTML = "";
-  ordersCache = [];
-
-  snapshot.forEach(docSnap => {
-    const order = { id: docSnap.id, ...docSnap.data() };
-    ordersCache.push(order);
-
-    ordersDiv.innerHTML += `
-      <div class="order-card">
-        <h2>${order.id}</h2>
-        <p>${order.customerName}</p>
-        <p>₹${order.total}</p>
+  let itemsHTML = "";
+  orderItems.forEach(item => {
+    itemsHTML += `
+      <div class="product-box">
+        <p><b>${item.name}</b></p>
+        <p>Size: ${item.selectedSize || "N/A"}</p>
+        <p>Qty: ${item.qty || item.quantity || 1}</p>
+        <p>Price: ₹${item.price}</p>
       </div>
     `;
   });
-}
 
-/* EXPORT */
-function exportOrders() {
-  if (ordersCache.length === 0) return alert("No orders");
+  ordersDiv.innerHTML += `
+    <div class="order-card">
+      <h2>Order ID: ${order.id}</h2>
+      <p><b>Name:</b> ${order.customerName || order.name}</p>
+      <p><b>Phone:</b> ${order.phone}</p>
+      <p><b>Address:</b> ${order.address}</p>
+      <p><b>Payment:</b> ${order.paymentStatus || "Pending"}</p>
+      <p><b>Status:</b> ${order.orderStatus || "Order Placed"}</p>
 
-  let csv = "ID,Name,Total\n";
+      ${itemsHTML}
 
-  ordersCache.forEach(o => {
-    csv += `${o.id},${o.customerName},${o.total}\n`;
-  });
+      <p class="total">Total: ₹${order.total}</p>
 
-  const blob = new Blob([csv]);
-  const url = URL.createObjectURL(blob);
+      <select onchange="updateOrderStatus('${order.id}', this.value)">
+        <option value="">Update Status</option>
+        <option value="Order Placed">Order Placed</option>
+        <option value="Packed">Packed</option>
+        <option value="Shipped">Shipped</option>
+        <option value="Delivered">Delivered</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "orders.csv";
-  a.click();
-}
+      <button class="danger-btn" onclick="deleteOrder('${order.id}')">Delete Order</button>
+    </div>
+  `;
+});
 
-/* GLOBAL */
-window.loginAdmin = loginAdmin;
-window.logoutAdmin = logoutAdmin;
-window.saveProduct = saveProduct;
-window.clearProductForm = clearProductForm;
-window.editProduct = editProduct;
-window.deleteProduct = deleteProduct;
-window.exportOrders = exportOrders;
+} catch (error) {ordersDiv.innerHTML = "Error loading orders.";console.error(error);}}
+
+async function updateOrderStatus(orderId, status) {if (!status) return;
+
+try {await updateDoc(doc(db, "orders", orderId), {orderStatus: status});
+
+alert("Order status updated.");
+loadOrders();
+
+} catch (error) {alert("Error updating order: " + error.message);}}
+
+async function deleteOrder(orderId) {if (!confirm("Delete this order?")) return;
+
+try {await deleteDoc(doc(db, "orders", orderId));alert("Order deleted.");loadOrders();} catch (error) {alert("Error deleting order: " + error.message);}}
+
+function exportOrders() {if (ordersCache.length === 0) {alert("No orders to export.");return;}
+
+let csv = "Order ID,Name,Phone,Address,Total,Payment Status,Order Status\n";
+
+ordersCache.forEach(order => {csv += "${order.id}","${order.customerName || order.name}","${order.phone}","${order.address}","${order.total}","${order.paymentStatus}","${order.orderStatus}"\n;});
+
+const blob = new Blob([csv], { type: "text/csv" });const url = URL.createObjectURL(blob);
+
+const a = document.createElement("a");a.href = url;a.download = "orders.csv";a.click();
+
+URL.revokeObjectURL(url);}
+
+window.loginAdmin = loginAdmin;window.logoutAdmin = logoutAdmin;window.saveProduct = saveProduct;window.clearProductForm = clearProductForm;window.editProduct = editProduct;window.deleteProduct = deleteProduct;window.updateOrderStatus = updateOrderStatus;window.deleteOrder = deleteOrder;window.exportOrders = exportOrders;
