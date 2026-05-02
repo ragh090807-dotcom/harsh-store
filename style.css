@@ -685,4 +685,21 @@ section,
   .product-detail-box {
     grid-template-columns: 1fr;
   }
+}/* Fix product card buttons overflowing */
+.product-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.product-actions button {
+  width: 100%;
+  min-width: 0;
+  padding: 13px 10px;
+  font-size: 14px;
+}
+
+.product-card {
+  overflow: hidden;
 }
