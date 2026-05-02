@@ -32,7 +32,6 @@
       <a href="#products" onclick="closeMenu()">Shop</a>
       <a href="track.html" onclick="closeMenu()">Track Order</a>
 
-      <!-- ONLY ADDED -->
       <a href="login.html" onclick="closeMenu()">Login</a>
       <a href="account.html" onclick="closeMenu()">My Orders</a>
 
@@ -78,25 +77,10 @@
 </section>
 
 <section class="premium-strip">
-  <div>
-    <h3>Premium Quality</h3>
-    <p>Carefully selected clothing</p>
-  </div>
-
-  <div>
-    <h3>Size Options</h3>
-    <p>Choose your perfect fit</p>
-  </div>
-
-  <div>
-    <h3>WhatsApp Order</h3>
-    <p>Simple and fast checkout</p>
-  </div>
-
-  <div>
-    <h3>Order Tracking</h3>
-    <p>Track your orders anytime</p>
-  </div>
+  <div><h3>Premium Quality</h3><p>Carefully selected clothing</p></div>
+  <div><h3>Size Options</h3><p>Choose your perfect fit</p></div>
+  <div><h3>WhatsApp Order</h3><p>Simple and fast checkout</p></div>
+  <div><h3>Order Tracking</h3><p>Track your orders anytime</p></div>
 </section>
 
 <section class="section" id="collections">
@@ -124,22 +108,51 @@
   <h2>Products</h2>
 
   <div class="shop-layout">
+
+    <!-- ✅ FULL FILTER SYSTEM -->
     <aside class="filters">
-      <input id="searchInput" placeholder="Search">
+      <h3>Filter Products</h3>
+
+      <input type="text" id="searchInput" placeholder="Search product...">
+
       <select id="categoryFilter">
-        <option value="all">All</option>
+        <option value="all">All Categories</option>
         <option value="Ethnic">Ethnic</option>
         <option value="Festive">Festive</option>
         <option value="Modern">Modern</option>
+        <option value="Cotton">Cotton</option>
+        <option value="Party">Party</option>
       </select>
+
+      <select id="sizeFilter">
+        <option value="all">All Sizes</option>
+        <option value="S">S</option>
+        <option value="M">M</option>
+        <option value="L">L</option>
+        <option value="XL">XL</option>
+      </select>
+
+      <div class="filter-row">
+        <input type="number" id="minPrice" placeholder="Min ₹">
+        <input type="number" id="maxPrice" placeholder="Max ₹">
+      </div>
+
+      <select id="sortFilter">
+        <option value="default">Sort: Featured</option>
+        <option value="low">Price: Low to High</option>
+        <option value="high">Price: High to Low</option>
+        <option value="name">Name A-Z</option>
+      </select>
+
+      <button class="main-btn" onclick="clearFilters()">Clear Filters</button>
     </aside>
 
     <div class="product-grid" id="productGrid"></div>
+
   </div>
 </section>
 
 <section class="section contact" id="contact">
-
   <h2>Contact</h2>
   <p>Order directly via WhatsApp</p>
 
@@ -148,7 +161,6 @@
       Chat on WhatsApp
     </a>
   </div>
-
 </section>
 
 <footer>
@@ -162,7 +174,6 @@
 
 <div class="cart-overlay" id="cartOverlay">
   <div class="cart-box">
-
     <div class="cart-head">
       <h2>Your Cart</h2>
       <button onclick="closeCart()">×</button>
@@ -177,7 +188,6 @@
     <textarea id="custAddress" placeholder="Address"></textarea>
 
     <button onclick="sendWhatsAppOrder()">Order</button>
-
   </div>
 </div>
 
