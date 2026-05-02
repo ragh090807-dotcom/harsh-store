@@ -964,3 +964,49 @@ footer {
     font-size: 36px;
   }
 }
+/* ===== FIX BUTTON & INPUT OVERWRITE ===== */
+
+/* Reset unwanted global overrides inside pages */
+.product-detail-page button,
+.track-page button,
+.login-box button,
+.account-page button {
+  all: unset;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* Reapply proper button style */
+.product-detail-page button,
+.track-page button,
+.login-box button,
+.account-page button {
+  background: var(--dark);
+  color: white;
+  padding: 12px 22px;
+  border-radius: 25px;
+  font-weight: 600;
+  text-align: center;
+  transition: 0.3s;
+}
+
+.product-detail-page button:hover,
+.track-page button:hover,
+.login-box button:hover,
+.account-page button:hover {
+  background: var(--gold);
+}
+
+/* Fix inputs */
+.product-detail-page input,
+.track-page input,
+.login-box input,
+.account-page input,
+.product-detail-page select,
+.track-page select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  margin-bottom: 12px;
+}
