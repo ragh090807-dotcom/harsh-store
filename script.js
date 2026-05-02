@@ -195,7 +195,7 @@ function applyFilters() {
 
     return (
       String(product.name || "").toLowerCase().includes(searchValue) &&
-      (category === "all" || product.category === category) &&
+      (category === "all" || String(product.category || "").trim().toLowerCase() === String(category).trim().toLowerCase()) &&
       (size === "all" || productSizes.includes(size)) &&
       Number(product.price) >= min &&
       Number(product.price) <= max &&
