@@ -27,6 +27,35 @@ const minPrice = document.getElementById("minPrice");
 const maxPrice = document.getElementById("maxPrice");
 const sortFilter = document.getElementById("sortFilter");
 
+function isVideoProduct(product) {
+  const url = product.image || "";
+  return (
+    product.category === "Watch and Buy" ||
+    url.includes(".mp4") ||
+    url.includes(".webm") ||
+    url.includes(".mov")
+  );
+}
+
+function productMediaHTML(product) {
+  if (isVideoProduct(product)) {
+    return `
+      <video 
+        src="${product.image}" 
+        muted 
+        loop 
+        playsinline 
+        controls
+        onclick="openProduct('${product.id}')">
+      </video>
+    `;
+  }
+
+  return `
+    <img src="${product.image}" alt="${product.name}" onclick="openProduct('${product.id}')">
+  `;
+}
+
 async function saveOrder(orderData) {
   return await addDoc(collection(db, "orders"), {
     ...orderData,
@@ -119,7 +148,7 @@ function displayProducts(list = products) {
     productGrid.innerHTML += `
       <div class="product-card">
         <div class="product-image-wrap">
-          <img src="${product.image}" alt="${product.name}" onclick="openProduct('${product.id}')">
+          ${productMediaHTML(product)}
           <span class="product-badge">${isOut ? "Out of Stock" : product.category || "New"}</span>
 
           <button class="wish-btn ${wished ? "active" : ""}" onclick="toggleWishlist('${product.id}')">
@@ -306,7 +335,12 @@ function updateCart() {
   cart.forEach(item => {
     cartItems.innerHTML += `
       <div class="cart-item">
-        <img src="${item.image}" alt="${item.name}">
+        ${
+          isVideoProduct(item)
+            ? `<video src="${item.image}" muted playsinline></video>`
+            : `<img src="${item.image}" alt="${item.name}">`
+        }
+
         <div>
           <h4>${item.name}</h4>
           <p>Size: ${item.selectedSize}</p>
