@@ -233,4 +233,135 @@ textarea {
 footer {
   position: relative;
   z-index: 1;
+}/* ===== BETTER BUTTONS — SAFE GLOBAL FIX ===== */
+
+button,
+.main-btn,
+.outline-btn,
+.cart-btn,
+.icon-btn,
+.small-btn,
+.remove-btn,
+.danger-btn,
+.edit-btn,
+.logout-btn,
+.export-btn,
+.save-btn {
+  width: auto !important;
+  max-width: 100%;
+  min-height: 44px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 13px 24px !important;
+  border-radius: 999px !important;
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
+  overflow: visible !important;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover,
+.main-btn:hover,
+.outline-btn:hover,
+.cart-btn:hover,
+.icon-btn:hover,
+.small-btn:hover,
+.remove-btn:hover,
+.danger-btn:hover,
+.edit-btn:hover,
+.logout-btn:hover,
+.export-btn:hover,
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(23, 17, 15, 0.16);
+}
+
+/* Dark primary buttons */
+button,
+.main-btn,
+.cart-btn,
+.icon-btn,
+.save-btn,
+.edit-btn {
+  background: var(--dark) !important;
+  color: white !important;
+}
+
+/* Outline buttons */
+.outline-btn {
+  background: transparent !important;
+  color: var(--dark) !important;
+  border: 2px solid var(--dark) !important;
+}
+
+.outline-btn:hover {
+  background: var(--dark) !important;
+  color: white !important;
+}
+
+/* Special buttons */
+.small-btn {
+  background: #fff1d8 !important;
+  color: var(--dark) !important;
+}
+
+.remove-btn,
+.danger-btn {
+  background: #c62828 !important;
+  color: white !important;
+}
+
+.logout-btn {
+  background: var(--gold) !important;
+  color: white !important;
+}
+
+.export-btn {
+  background: #25d366 !important;
+  color: white !important;
+}
+
+/* Full-width only where needed */
+.checkout-form button,
+.cart-box button:not(.cart-head button),
+.product-detail-info button,
+.track-box button,
+.login-box button {
+  width: 100% !important;
+}
+
+/* Close button should remain small */
+.cart-head button {
+  width: 42px !important;
+  height: 42px !important;
+  min-height: 42px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  font-size: 24px;
+}
+
+/* Prevent clipping */
+section,
+.contact,
+.product-detail-box,
+.track-box,
+.login-box,
+.cart-box {
+  overflow: visible !important;
+}
+
+/* Contact spacing fix */
+.contact p {
+  margin-bottom: 22px !important;
+}
+
+.contact .main-btn {
+  margin-top: 14px !important;
 }
