@@ -41,13 +41,13 @@ function productMediaHTML(product) {
   if (isVideoProduct(product)) {
     return `
       <video 
-        src="${product.image}" 
-        muted 
-        loop 
-        playsinline 
-        controls
-        onclick="openProduct('${product.id}')">
-      </video>
+  src="${product.image}" 
+  autoplay
+  muted 
+  loop 
+  playsinline
+  onclick="openProduct('${product.id}')">
+</video>
     `;
   }
 
