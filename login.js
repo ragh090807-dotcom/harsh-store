@@ -1,43 +1,27 @@
 import { auth } from "./firebase-config.js";
 
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const email = document.getElementById("email");
-const password = document.getElementById("password");
-const authMessage = document.getElementById("authMessage");
+const provider = new GoogleAuthProvider();
 
-async function signupCustomer() {
-  if (!email.value || !password.value) {
-    authMessage.textContent = "Enter email and password.";
-    return;
-  }
-
+async function loginWithGoogle() {
   try {
-    await createUserWithEmailAndPassword(auth, email.value, password.value);
-    authMessage.textContent = "Account created successfully.";
-    window.location.href = "account.html";
+    await signInWithPopup(auth, provider);
+    alert("Login successful.");
+    window.location.href = "index.html";
   } catch (error) {
-    authMessage.textContent = error.message;
+    alert(error.message);
   }
 }
 
-async function loginCustomer() {
-  if (!email.value || !password.value) {
-    authMessage.textContent = "Enter email and password.";
-    return;
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("Logged in:", user.email);
   }
+});
 
-  try {
-    await signInWithEmailAndPassword(auth, email.value, password.value);
-    authMessage.textContent = "Login successful.";
-    window.location.href = "account.html";
-  } catch (error) {
-    authMessage.textContent = error.message;
-  }
-}
-
-window.signupCustomer = signupCustomer;
-window.loginCustomer = loginCustomer;
+window.loginWithGoogle = loginWithGoogle;
